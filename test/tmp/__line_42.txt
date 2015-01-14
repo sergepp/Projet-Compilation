@@ -1,1 +1,0 @@
-def confirme(nombre:Integer) return Integer{}

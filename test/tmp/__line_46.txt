@@ -1,1 +1,0 @@
-def couleur() returns Couleur := coul

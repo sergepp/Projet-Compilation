@@ -1,1 +1,0 @@
-( "= (" & x.toString() & ", " & y.toString() & ")" ).println();

@@ -27,3 +27,21 @@
 *.i*86
 *.x86_64
 *.hex
+
+# Temp file generated for tests
+test/tmp/*
+#Flex and bison temp files
+test/*~
+test/*.out
+test/*.res
+test/*/*~
+test/*/*.out
+test/*/*.res
+*~ 
+src/tp.exe* 
+src/./tp 
+src/*.o 
+src/tp_l.* 
+src/tp_y.* 
+src/test_lex 
+src/main_test 

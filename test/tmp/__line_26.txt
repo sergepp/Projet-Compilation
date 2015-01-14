@@ -1,1 +1,0 @@
-def gety() returns Integer := this.y

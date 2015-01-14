@@ -1,1 +1,0 @@
-var b1 : Integer := p.x - x;

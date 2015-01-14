@@ -1,1 +1,0 @@
-var p1: Point := new Point(1, -5, "p1");
