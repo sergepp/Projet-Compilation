@@ -1,0 +1,5 @@
+class ColoredPoint(xc: Integer, yc: Integer, c: Color) extends Point(xc, yc) {
+    col := c ;
+} is {
+    var col: Color;
+}

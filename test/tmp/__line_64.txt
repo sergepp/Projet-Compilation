@@ -1,0 +1,3 @@
+/* Exemple de programme dans le langage source
+ * Attention : pour l'instant seuls les aspects lexicaux et
+ */

@@ -1,0 +1,1 @@
+def setCouleur(c: Couleur) returns Void { coul := c; }

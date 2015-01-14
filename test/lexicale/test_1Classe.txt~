@@ -1,0 +1,29 @@
+{}
+# Error    
+class DefaultPoint() extends ColoredPoint(0, 0, Color.white()) is {}
+{}
+#
+class then Color()  is {
+    var hexValue: String;
+    def  static white() returns Color := new Color("000000")
+}
+{}
+# Success
+class Point(xc: Integer, yc: Integer) {
+    x := xc;
+    y := yc;
+}
+is {
+    var x: Integer;
+    var y: Integer;
+}
+# Success
+class ColoredPoint(xc: Integer, yc: Integer, c: Color) extends Point(xc, yc) {
+    col := c ;
+} is {
+    var col: Color;
+}
+#
+class DefaultPoint() extends ColoredPoint(0, 0, Color.white()) is {}
+{}
+#

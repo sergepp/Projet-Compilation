@@ -1,0 +1,5 @@
+class Point(xc: Integer, yc: Integer) { 
+    x := xc;
+    y := zc; 
+} is {}
+{}

@@ -1,0 +1,1 @@
+class Point(xc : Integer, yc : Integer){x:= xc; y := yc; cpt=cpt+1;}is{var static cpt : Integer := 1;var x: Integer;var y: Integer;}

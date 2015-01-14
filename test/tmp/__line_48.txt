@@ -1,0 +1,1 @@
+def egal (p: Point) returns Integer {yield -1}

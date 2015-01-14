@@ -1,0 +1,72 @@
+#
+class Point() {}
+#
+fonction Point() {}
+#
+class point() {}
+#
+class Fils() extends Parents()
+#
+class Point(xc: Integer, yc: Integer) { x := xc; y := yc; }
+#
+class Point() is {}
+#
+class Point(xc: Integer, yc: Integer) { x := xc; y := yc; } is { }
+#
+def newMethode() returns Integer := 1
+#
+class Point(xc : Integer, yc : Integer){x:= xc; y := yc; cpt=cpt+1;}is{var static cpt : Integer := 1;var x: Integer;var y: Integer;}
+#
+{x:= xc; y := yc; cpt=cpt+1;}
+#
+{var static cpt : Integer := 1;var x: Integer;var y: Integer; def gety() returns Integer := this.y}
+#
+this super void
+#
+def gety() returns Integer := this.y 
+#
+var p1: Point := new Point(1, -5, "p1");
+#
+var b1 : Integer := p.x - x;
+#
+if else
+#
+class Point(xc: Integer, yc: Integer) { x := xc; y := yc; cpt = cpt + 1; } 
+#
+{var static cpt : Integer := 1;var x: Integer;var y: Integer;def gety() returns Integer := this.y}
+#
+class Egale_2 (){}
+#
+var x:color: = color(green)
+#
+def confirme(nombre:Integer) return Integer{}
+#
+def setCouleur(c: Couleur) returns Void { coul := c; } 
+#
+def couleur() returns Couleur := coul
+#
+def egal (p: Point) returns Integer {yield -1}
+#
+def override verboseMove (dx: Integer, dy: Integer) returns Void {}
+#
+/* corps du constructeur */
+#
+/* corps du constructeur ***/
+#
+/***corps du constructeur */
+#
+/* ///corps du constructeur/// */
+#
+/*/*corps du constructeur */
+#
+var x: Integer; /*abc*/
+#
+/* Exemple de programme dans le langage source
+ * Attention : pour l'instant seuls les aspects lexicaux et
+ */
+#
+var name: String := "x" & cpt.toString();
+#
+( "= (" & x.toString() & ", " & y.toString() & ")" ).println();
+#
+p2.move(p1.getx()-2*5-3, p1.gety());
