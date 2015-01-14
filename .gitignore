@@ -29,7 +29,8 @@
 *.hex
 
 # Temp file generated for tests
-test/tmp/*
+test/tmp/*.*
+src/Makefile
 #Flex and bison temp files
 test/*~
 test/*.out

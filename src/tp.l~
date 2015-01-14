@@ -105,5 +105,5 @@ void lexError(char c) {
 {InlineComment}     { }
 {BlockComment}      { }
 {Delim}             { }
-{AnyThing}          { return(ERROR); }
+{AnyThing}          { printf("Reconnu %s \n", yytext); return(ERROR); }
 %%

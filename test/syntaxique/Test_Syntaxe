@@ -1,6 +1,6 @@
-#
+# Error
 class  Point() is {}
-{}
+{
 #
 class Fils() extends Parents() is {}
 {}

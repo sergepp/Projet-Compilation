@@ -105,7 +105,7 @@ IdentP makeIdent(int line, char *id) {
 
 /* Variables pour optimiser l'affichage*/
 int prefixIndex = 0;
-int verbose = FALSE;
+int verbose = TRUE;
 int newLine = TRUE;
 void prefix() {
     int i = 0;
@@ -378,10 +378,10 @@ int analyseurLexical(char* tmpFileName) {
     
     if (verbose == TRUE ){ lineCpt++ ;  if ( lineCpt % 6 == 0 ) printf("\n\t"); }
     switch (token) {
-        case 0:  if (verbose == TRUE ) printf("\n\n"); return 0;/*
+        case 0:  if (verbose == TRUE ) printf("\n\n"); return 0;
         case EXTENDS    : if ( verbose == TRUE) { printf( "EXTENDS " ); } break; 
         case OVERRIDE   : if ( verbose == TRUE) { printf( "OVERRIDE " ); } break; 
-        case CLASS      : if ( verbose == TRUE) { printf( "CLASS "   ); } break; */
+        case CLASS      : if ( verbose == TRUE) { printf( "CLASS "   ); } break; 
         case VAR        : if ( verbose == TRUE) { printf( "VAR "     ); } break;     
         case ASSIGN     : if ( verbose == TRUE) { printf( "ASSIGN "  ); } break;
         case IS         : if ( verbose == TRUE) { printf( "IS "      ); } break;      
@@ -421,7 +421,10 @@ int analyseurLexical(char* tmpFileName) {
 	                      return ERROR;
 	        }
           break;
-        case ERROR:
+        case '@' : printf("\n\t Arobase Reconnu : %d %s\n",token,  yytext);
+                    return ERROR;
+        case ERROR: printf("\n\tToken Non Reconnu : %s\n", yytext);
+                    return ERROR;
         default:
           printf("\n\tToken Non Reconnu : %d : %s\n", token, yytext); 
           return ERROR;
