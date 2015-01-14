@@ -15,6 +15,8 @@ char* analyseurLexical() {
     case VAR        : strcat(result, "VAR "     );  break;     
     case ASSIGN     : strcat(result, "ASSIGN "  );  break;  
     case IS         : strcat(result, "IS "      );  break;      
+    case YIELD      : strcat(result, "YIELD "   );  break;          
+    case CONCAT     : strcat(result, "CONCAT "  );  break;          
     case DEF        : strcat(result, "DEF "     );  break;       
     case STATIC     : strcat(result, "STATIC "  );  break;  
     case RETURNS    : strcat(result, "RETURNS " );  break;  

@@ -105,7 +105,7 @@ IdentP makeIdent(int line, char *id) {
 
 /* Variables pour optimiser l'affichage*/
 int prefixIndex = 0;
-int verbose = TRUE;
+int verbose = FALSE;
 int newLine = TRUE;
 void prefix() {
     int i = 0;
@@ -316,7 +316,7 @@ FILE *fd = NIL(FILE);
 
 int analyseurSyntaxique(char* tmpFileName, int noLigneDebutPrg, int noLigneFinPrg ) {
    
-  int res, p;
+  int res;
   /* Initialisation du curseur du début*/
   yylineno = noLigneDebutPrg;
   
@@ -326,7 +326,7 @@ int analyseurSyntaxique(char* tmpFileName, int noLigneDebutPrg, int noLigneFinPr
   }
 
   /* redirige l'entree standard sur le fichier... */
-  close(0); p = dup(fi); close(fi);
+  close(0); dup(fi); close(fi);
    
   /* Lance l'analyse syntaxique de tout le source, en appelant yylex au fur
    * et a mesure. Execute les actions semantiques en parallele avec les
@@ -365,7 +365,7 @@ int analyseurLexical(char* tmpFileName) {
         fprintf(stderr, "Erreur: fichier inaccessible %s\n", tmpFileName);
         exit(1);  
    }
-
+    
    /* redirige l'entree standard sur le fichier... */
    close(0); dup(fi); close(fi); 
  
@@ -373,7 +373,7 @@ int analyseurLexical(char* tmpFileName) {
   /* printf("Debut de l'analyse Lexical\n") ; */
   if (verbose == TRUE ) printf("\t");
   while (1) {
-
+    
     token = yylex();
     
     if (verbose == TRUE ){ lineCpt++ ;  if ( lineCpt % 6 == 0 ) printf("\n\t"); }
@@ -421,8 +421,6 @@ int analyseurLexical(char* tmpFileName) {
 	                      return ERROR;
 	        }
           break;
-        case '@' : printf("\n\t Arobase Reconnu : %d %s\n",token,  yytext);
-                    return ERROR;
         case ERROR: printf("\n\tToken Non Reconnu : %s\n", yytext);
                     return ERROR;
         default:

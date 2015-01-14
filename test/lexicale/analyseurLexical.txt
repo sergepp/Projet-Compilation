@@ -1,5 +1,5 @@
-# Success
-@ class $$ - |  Point(FRrr class ) {}
+# Error
+:=  class  - |  Point(FRrr class ) {}
 #
 fonction Point() {}
 #
