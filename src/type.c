@@ -3,6 +3,159 @@
 extern int yylineno;
 
 extern char* yytext; 
+ 
+
+
+
+
+/*
+
+Var ParamDeclSetNext(Var param, Var next);
+void ParamDeclAssertIsOk(char* name, char* classType);
+Var ParamDecl(char* name, char* classType);
+
+
+void ExtendsDeclAssertIsOk( char* classType, Expr expr);
+Instruction ExtendsDecl(char* classType, Expr expr);
+void ConstructorBodyAssertIsOk(Instr consBody);
+
+
+Class ClassDeclSetNext(Class class, Class next);
+void ClassDeclAssertIsOk(char* className, Var classParamDecl ,Instruction extendsDecl, Instruction constructorBody, Var fieldDecl, Method methodDecl);       
+Class ClassDecl(char* className, Var classParamDecl ,Instruction extendsDecl, Instruction constructorBody, Var fieldDecl, Method methodDecl);       
+   
+
+void StaticVarDeclAssertIsOk(char* name, char* classType, Expr expr);
+Var StaticVarDecl(char* name, char* classType);
+
+
+void OverrideMethodDeclAssertIsOk(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr); 
+Method OverrideMethodDecl(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr);
+
+Method StaticMethodDeclAssertIsOk(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr); 
+Method StaticMethodDecl(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr);
+
+void MethodDeclAssertIsOk(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr); 
+Method MethodDecl(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr);  
+ 
+Method MethodDeclParamSetNext(Method method, Method next);  
+
+void ParamDeclAssertIsOk(char* name, char* classType); 
+Var ParamDecl(char* name, char* classType);
+
+*/
+
+
+Var ParamDeclSetNext(Var param, Var next){
+    printf("Not implemented\n");
+    return NEW(1, _Var);
+}
+
+void ParamDeclAssertIsOk(char* name, char* classType){
+    printf("Not implemented\n");
+}
+
+Var ParamDecl(char* name, char* classType){
+    printf("Not implemented\n");
+    return NEW(1, _Var);
+}
+
+
+
+void ExtendsDeclAssertIsOk( char* classType, Expr expr){
+    printf("Not implemented\n");
+}
+
+Instr ExtendsDecl(char* classType, Expr expr){
+    printf("Not implemented\n");
+    return NEW(1, _Instr);
+}
+
+void ConstructorBodyAssertIsOk(Instr consBody){
+    printf("Not implemented\n");
+}
+
+
+Class ClassDeclSetNext(Class class, Class next){
+    printf("Not implemented\n");
+    return NEW(1, _Class);
+}
+void ClassDeclAssertIsOk(char* className, Var classParamDecl ,Instr extendsDecl, Instr constructorBody, Var fieldDecl, Method methodDecl){
+    printf("Not implemented\n");
+}       
+Class ClassDecl(char* className, Var classParamDecl ,Instr extendsDecl, Instr constructorBody, Var fieldDecl, Method methodDecl){
+    printf("Not implemented\n");
+    return NEW(1, _Class);
+}
+       
+   
+
+void StaticVarDeclAssertIsOk(char* name, char* classType, Expr expr){
+    printf("Not implemented\n");
+}
+Var StaticVarDecl(char* name, char* classType){
+    printf("Not implemented\n");
+    return NEW(1, _Var);
+}
+
+
+void OverrideMethodDeclAssertIsOk(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr){
+    printf("Not implemented\n");
+} 
+Method OverrideMethodDecl(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr){
+    printf("Not implemented\n");
+    return NEW(1, _Method);
+}
+
+Method StaticMethodDeclAssertIsOk(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr){
+    printf("Not implemented\n");
+    return NEW(1, _Method);
+} 
+Method StaticMethodDecl(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr){
+    printf("Not implemented\n");
+    return NEW(1, _Method);
+}
+
+void MethodDeclAssertIsOk(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr){
+    printf("Not implemented\n");
+    
+} 
+Method MethodDecl(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr){
+    printf("Not implemented\n");
+    return NEW(1, _Method);
+} 
+ 
+Method MethodDeclParamSetNext(Method method, Method next){
+    printf("Not implemented\n");
+    return NEW(1, _Method);
+} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void PrintError(char* message);
+
+void PrintError(char* message){
+    printf("[ Erreur ] %s\n", message );
+}
 
 ClassType IntegerType() {
     ClassType IntegerType    = NEW(1, _ClassType);
@@ -42,6 +195,7 @@ Expr ExprFromArithmetic(Expr left, int op, Expr right){
 
     return expr;
 }
+
 void ExprAssertInheritsSameClass(Expr e1, Expr e2){
     /*
     if ( e1 et e2 ont la meme classe modulo héritage ) {
@@ -50,6 +204,7 @@ void ExprAssertInheritsSameClass(Expr e1, Expr e2){
     }
     */ 
 }
+
 void ExprAssertSameClass(Expr e1, Expr e2){
     /*
     if ( e1 et e2 ont la meme classe ) {
@@ -137,6 +292,7 @@ Method IntegerAddMethod() {
     return IntegerMethod;
 }
 
+/* Renvoi la liste de toutes les methodes disponibles sur l'objet Integer */
 Method IntegerMethods() {
     Method 
     IntegerMethods = IntegerAddMethod();    /*
@@ -148,7 +304,9 @@ Method IntegerMethods() {
     return IntegerMethods;
 }
 
-
+/* Cree les classes predefinies si elles ne sont pas deja définies 
+ * par defaut et y ajoute la definition de la classe passée en paraletre 
+ */
 Class defaultClassDefsPlus(Class classDefs) {
     Class Integer    = NEW(1, _Class);
     Integer->type    = IntegerType();
@@ -185,10 +343,7 @@ void printPadding() {
 
 Expr ExprArithmeticEval(Expr expr); 
 Expr ExprEval(Expr expr);
-
-
 Expr ExprArithmeticEval(Expr expr) {
-
     Expr rightTmp, leftTmp;
     leftTmp  =  ExprEval(expr->left); 
     rightTmp =  ExprEval(expr->right); 
@@ -197,10 +352,9 @@ Expr ExprArithmeticEval(Expr expr) {
         case SUB        : expr->value.i = leftTmp->value.i - rightTmp->value.i ;break ;            
         case DIV        : expr->value.i = leftTmp->value.i / rightTmp->value.i ;break ; 
         case MUL        : expr->value.i = leftTmp->value.i * rightTmp->value.i ;break ; 
-        default : printf("[ Erreur ] Evaluation Non pris en charge par la fonction : ExprArithmeticEval\n "); break;     
+        default : PrintError("Evaluation Non pris en charge par la fonction : ExprArithmeticEval\n "); break;     
     }
-    return expr; 
-        
+    return expr;         
 }
 
 
@@ -214,7 +368,7 @@ Expr ExprEval(Expr expr) {
         case SUB        :           
         case DIV        :
         case MUL        : return ExprArithmeticEval(expr); 
-        default : printf("Evaluation Non encore implementé \n "); break;     
+        default : printf("Evaluation Non encore implementée \n "); break;     
     }
     return expr;     
 }

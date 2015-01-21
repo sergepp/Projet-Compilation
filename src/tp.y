@@ -69,7 +69,7 @@ extern void yyerror();  /* definie dans tp.c */
  */
 
 /* "program" est l'axiome de la grammaire */
-program : proceduralBloc        { $$ = makeProgram(NULL, $1); }
+program : proceduralBloc         { $$ = makeProgram(NULL, $1); }
     | L_classDecl proceduralBloc { $$ = makeProgram($1, $2);   }
 ; 
 L_classDecl : classDecl           { $$ = $1; }
