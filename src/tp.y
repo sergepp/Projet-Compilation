@@ -216,6 +216,6 @@ L_varDecl : varDecl         { $$ = $1 }
     |  L_varDecl varDecl    { $$ = InstrSetNext($1, $2); }
 ;
 varDecl : VAR ID ':' CLASS_TYPE ASSIGN expr ';' { InstrAssertVarDeclIsOk($2, $4, $6);            $$ = InstrFromVarDecl($2, $4, $6);   }
-    |     VAR ID ':' CLASS_TYPE ';'             { InstrAssertAbstractVarDeclIsOk($2, $4, NULL);  $$ = InstrFromVarDecl($2, $4, NULL); }
+    |     VAR ID ':' CLASS_TYPE ';'             { InstrAssertAbstractVarDeclIsOk($2, $4);  $$ = InstrFromVarDecl($2, $4, NULL); }
 ;
 
