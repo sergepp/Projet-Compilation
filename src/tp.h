@@ -1,13 +1,12 @@
 #include <stdlib.h>
 
+#define TRUE 1
+#define FALSE 0 
+typedef int bool;
+
 /* deux macros pratiques, utilisees dans les allocations */
 #define NEW(howmany, type) (type *) calloc((unsigned) howmany, sizeof(type))
 #define NIL(type) (type *) 0
-
-#define TRUE 1
-#define FALSE 0 
-
-typedef int bool;
 
 /* la structure d'un arbre (noeud ou feuille) */
 typedef struct _Tree {
@@ -77,6 +76,13 @@ typedef union
   char *S;
   int I; 
   TreeP T;
+  Expr Expr;
+  Class     Class;
+  Param     Param;
+  Var       Var;
+  Method    Method;
+  Program   Program;
+  Instr     Instruction;
 } YYSTYPE;
 
 /* Variables et constantes globales */
@@ -94,6 +100,8 @@ VarDeclP makeVar(char *name);
 VarDeclP declVar(char *name, TreeP tree, VarDeclP currentScope);
 
 /* construction pour les arbres */
+Program makeProgram(Class classDefs, Instr instrs);
+
 TreeP makeLeafStr(short op, char *str);
 TreeP makeLeafInt(short op, int val);
 TreeP makeTree(short op, int nbChildren, ...);

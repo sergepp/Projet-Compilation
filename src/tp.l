@@ -1,18 +1,19 @@
 Digit [0-9]
-Letter  [a-zA-Z]
+Letter  [a-zA-Z_]
 LD  ({Letter}|{Digit})
 Star \*
 NotStar [^*]
 Delim [ \n\t\r]
 Symbol [;,\(\)\{\}:\.]
-LitteralString \".*\"
+LitteralString \"([^\"])*\"
 SlashStar /\*
 NotStarSlash [^*/]
 StarSlash \*/
 AnyThing .
 InlineComment (\/\/.*\n)
-BlockComment (\/\*([^*]|[ \r\n]|(\*+([^*\/]|[ \r\n])))*\*\/+)
+BlockComment  (\/\*([^*]|[ \r\n]|(\*+([^*\/]|[ \r\n])))*\*\/+)
 %{
+#include "type.h"
 #include "tp.h"
 #include "tp_y.h"
 #include <string.h>	

@@ -7,8 +7,14 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+
+int PrintPaddingNb =  4 ;
+char PrintPaddingChar = ' ';
+#include "type.h"
 #include "tp.h"
 #include "tp_y.h"
+
+
 #include <dirent.h>
 #include <stdarg.h>
 #include <assert.h>
@@ -105,7 +111,7 @@ IdentP makeIdent(int line, char *id) {
 
 /* Variables pour optimiser l'affichage*/
 int prefixIndex = 0;
-int verbose = FALSE;
+int verbose = FALSE  ;
 int newLine = TRUE;
 void prefix() {
     int i = 0;
@@ -123,7 +129,7 @@ char* ErrorResult = "    ";
 int fi;
 int analyseurLexical() ;
 int analyseurSyntaxique();
-
+extern int yychar;
 
 /* Fonctions auxiliaires de tests */
 bool hasValidFormat(char* resultatAttendu);
@@ -225,7 +231,8 @@ void faireAnalyse(int typeAnalyse, const char *dirname)
 
                         tmpStr = trim(ligne);
                         if (strlen(tmpStr) > 2 ) strcpy(resultatAttendu, tmpStr);
-                        else strcpy(resultatAttendu, "# Sucess"); 
+                        else strcpy(resultatAttendu, "# Sucess");
+                         
                         noLigneActuel++;
                     } 
                 }
@@ -245,15 +252,18 @@ void faireAnalyse(int typeAnalyse, const char *dirname)
 
 int main(int argc, char **argv) {
 
+    int d = 2;
+    if ( argc > 1 ) verbose = TRUE ;
     /* Test analyseur lexical */
     faireAnalyse(LEXICAL, "../test/lexicale/"); 
-    
+     if ( argc == 3 )  return 0;
     /* Test analyseur syntaxique   */
     faireAnalyse(SYNTAXIQUE, "../test/syntaxique/"); 
     printf("\n");
     return 0;
 }
 
+#include "type.c" 
 
 
 bool isExpectedResult(int resultatAnalyse, char*  resultatAttendu) {
@@ -267,6 +277,7 @@ bool isExpectedResult(int resultatAnalyse, char*  resultatAttendu) {
               || resultatAttendu[2] == 'S'  
               || resultatAttendu[3] == 'S')  
     ){ /* # ou #Success */
+        
         return(resultatAnalyse == SUCCESS);
     } 
     else { /* #Error */
@@ -352,8 +363,9 @@ int analyseurSyntaxique(char* tmpFileName, int noLigneDebutPrg, int noLigneFinPr
   if (fd != NIL(FILE)) fclose(fd);
   if (res == 0 && errorCode == NO_ERROR) { 
     fprintf(stderr,"\b");
+    return SUCCESS;
   } 
-  return res;
+  return ERROR;
   
 }
 
@@ -385,6 +397,8 @@ int analyseurLexical(char* tmpFileName) {
         case VAR        : if ( verbose == TRUE) { printf( "VAR "     ); } break;     
         case ASSIGN     : if ( verbose == TRUE) { printf( "ASSIGN "  ); } break;
         case IS         : if ( verbose == TRUE) { printf( "IS "      ); } break;      
+        case CONCAT     : if ( verbose == TRUE) { printf( "CONCAT "  ); } break;              
+        case YIELD      : if ( verbose == TRUE) { printf( "YIELD "  ); } break;                      
         case DEF        : if ( verbose == TRUE) { printf( "DEF "     ); } break;       
         case STATIC     : if ( verbose == TRUE) { printf( "STATIC "  ); } break;  
         case RETURN     : if ( verbose == TRUE) { printf( "RETURN "  ); } break;          
@@ -392,6 +406,7 @@ int analyseurLexical(char* tmpFileName) {
         case NEW        : if ( verbose == TRUE) { printf( "NEW  "    ); } break; 
         case CONST_INT  : if ( verbose == TRUE) { printf( "CONST_INT %d " , yylval.I ); } break;  
         case CONST_STR  : if ( verbose == TRUE) { printf( "CONST_STR %s " , yylval.S ); } break;    
+        case CONST_VOID : if ( verbose == TRUE) { printf( "CONST_STR %s " , yylval.S ); } break;    
         case CLASS_TYPE : if ( verbose == TRUE) { printf( "CLASS_TYPE %s ", yylval.S ); } break;
         case ID         : if ( verbose == TRUE) { printf( "ID %s "        , yylval.S ); } break;
         case IF         : if ( verbose == TRUE) { printf( "IF "  );  }    break;    
@@ -442,7 +457,7 @@ void setError(int code) {
  * Ici on se contente d'un message minimal.
  */
 void yyerror(char *ignore) {
-  fprintf(stderr, "Erreur de syntaxe à la ligne : %d\n", yylineno);
+  fprintf(stderr, "Erreur de syntaxe à la ligne : %d  au niveau de  : %s  \n", yylineno, yytext);
 }
 
 

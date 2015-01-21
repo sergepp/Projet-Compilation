@@ -3,14 +3,22 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
-#include "tp.h"
-#include "tp_y.h"
+
 
 /*
  * Toute cette premiere partie n'a (normalement) pas besoin d'etre modifiee
  */
 
-extern int yyparse();
+int PrintPaddingNb =  4 ;
+char PrintPaddingChar = ' ';
+
+#include "type.h"
+#include "tp.h"
+#include "tp_y.h"
+#include "type.c"
+
+extern int yyparse(); 
+   
 extern int yylineno;
 
 extern int yydebug;
@@ -37,41 +45,14 @@ FILE *fd = NIL(FILE);
  * Options: -[eE] -[vV] -[hH?]
  */
 int main(int argc, char **argv) {
-  int fi;
-  int i, res;
-
-  if (argc == 1) {
-    fprintf(stderr, "Syntax: tp -e -v program.txt\n");
+  int fi, res; 
+  
+  if ((fi = open("../test/syntaxique/ex1.txt", O_RDONLY)) == -1) {
+    fprintf(stderr, "Error: Cannot open %s\n", "../test/syntaxique/ex1.txt");
     exit(USAGE_ERROR);
-  }
-  for(i = 1; i < argc; i++) {
-    if (argv[i][0] == '-') {
-      switch (argv[i][1]) {
-      case 'v': case 'V':
-	verbose = TRUE; continue;
-      case 'e': case 'E':
-	noEval = TRUE; continue;
-      case '?': case 'h': case 'H':
-	fprintf(stderr, "Syntax: tp -e -v program.txt\n");
-	exit(USAGE_ERROR);
-      default:
-	fprintf(stderr, "Error: Unknown Option: %c\n", argv[i][1]);
-	exit(USAGE_ERROR);
-      }
-    } else break;
-  }
-
-  if (i == argc) {
-    fprintf(stderr, "Error: Program file is missing\n");
-    exit(USAGE_ERROR);
-  }
-
-  if ((fi = open(argv[i++], O_RDONLY)) == -1) {
-    fprintf(stderr, "Error: Cannot open %s\n", argv[i-1]);
-    exit(USAGE_ERROR);
-  }
-
-  /* redirige l'entree standard sur le fichier... */
+  }                 
+    
+  /* redirige l'entree standard sur le fichier.   .. */
   close(0); dup(fi); close(fi);
 
   /* Lance l'analyse syntaxique de tout le source, en appelant yylex au fur
@@ -89,7 +70,7 @@ int main(int argc, char **argv) {
    * c'est possible.
    */
   yydebug = 0;
-  res = yyparse();
+  res = yyparse();    
 
   if (fd != NIL(FILE)) fclose(fd);
   if (res == 0 && errorCode == NO_ERROR) return 0;
@@ -274,7 +255,7 @@ VarDeclP evalDecls (TreeP tree) {
  */
 int eval(TreeP tree, VarDeclP decls) {
   if (tree == NIL(Tree)) { exit(UNEXPECTED); }
-  switch (tree->op) {
+       switch (tree->op) {
   case ID:
     return evalVar(tree, decls);
   case EQ:
