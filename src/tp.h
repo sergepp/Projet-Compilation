@@ -53,6 +53,11 @@ typedef struct _Decl
 #define GT 14
 #define GTE 15
 
+#define FN_BLOC 16
+#define PROC_BLOC 17
+#define EXPR 18
+#define INSTR_BLOC 19
+
 /* Codes d'erreurs */
 #define SUCCESS     0
 #define ERROR      -1
@@ -83,6 +88,7 @@ typedef union
   Method    Method;
   Program   Program;
   Instr     Instruction;
+  ClassCall ClassCall;
 } YYSTYPE;
 
 /* Variables et constantes globales */

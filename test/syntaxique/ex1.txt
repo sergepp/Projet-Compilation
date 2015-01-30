@@ -1,3 +1,8 @@
+class Serge(){} is {}
+class ITRRntegerP(){} is {}
+class Sergeh(){} is {}
+class SergeP() extends Void() {} is {}
 {
-      9 * 8 * 9; 
+      x := 2;
+      
 }

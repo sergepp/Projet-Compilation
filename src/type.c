@@ -4,8 +4,27 @@ extern int yylineno;
 
 extern char* yytext; 
  
+Class Integer;
+
+Class String;
+
+Class Void;
+
+Class AllDefinedClasses;
 
 
+
+
+
+void PrintError(char* message);
+
+void PrintError(char* message){
+    printf(ANSI_COLOR_RED);
+    printPadding(); printf("[ Erreur ] %s\n", message );
+    printf(ANSI_COLOR_RESET "\n");
+}
+
+ 
 
 
 /*
@@ -43,16 +62,20 @@ Method MethodDeclParamSetNext(Method method, Method next);
 void ParamDeclAssertIsOk(char* name, char* classType); 
 Var ParamDecl(char* name, char* classType);
 
-*/
+*/ 
 
 
 Var ParamDeclSetNext(Var param, Var next){
-    printf("Not implemented\n");
-    return NEW(1, _Var);
+    Var i = param; 
+    while ( i->next != NULL ) {    
+        i = i->next;
+    }
+    i->next = next;
+    return param; 
 }
 
 void ParamDeclAssertIsOk(char* name, char* classType){
-    printf("Not implemented\n");
+    printf("ParamDeclAssertIsOk Not implemented\n");
 }
 
 Var ParamDecl(char* name, char* classType){
@@ -61,31 +84,91 @@ Var ParamDecl(char* name, char* classType){
 }
 
 
-
-void ExtendsDeclAssertIsOk( char* classType, Expr expr){
-    printf("Not implemented\n");
+Class GetClassByName(char* className){
+    Class class = AllDefinedClasses; 
+    while ( class != NULL  && strcmp(class->name, className) != 0 )
+         class = class->next;
+    return class;
 }
 
-Instr ExtendsDecl(char* classType, Expr expr){
-    printf("Not implemented\n");
-    return NEW(1, _Instr);
+
+void ExtendsDeclAssertIsOk( char* className, Expr expr){
+     char* message[128];
+    /* Il est impossible d'etendre les 3 classes predefinies Integer String et Void  */
+    if (   strcmp(className, "Integer") == 0
+        || strcmp(className, "String")  == 0
+        || strcmp(className, "Void")    == 0 )  {
+        sprintf(message, "Impossible d'etendre la classe predefinie %s \n", className);
+        PrintError(message);
+        exit(1);
+    }
+    
+    /* Il est impossible d'etendre une classe qui n'existe pas  */
+    Class c = GetClassByName(className);
+    if ( c == NULL ){ 
+        sprintf(message, "Impossible d'etendre la classe %s qui n'existe pas\n", className);
+        PrintError(message);
+        exit(1);
+     }
+}
+
+ClassCall ExtendsDecl(char* className, Expr expr){
+    ClassCall extendsCall =  NEW(1, _ClassCall);
+    extendsCall->class = GetClassByName(className);
+    extendsCall->args = expr;
+     
+    return extendsCall;
 }
 
 void ConstructorBodyAssertIsOk(Instr consBody){
-    printf("Not implemented\n");
+    printf("ConstructorBodyAssertIsOk Not implemented\n");
 }
 
 
 Class ClassDeclSetNext(Class class, Class next){
-    printf("Not implemented\n");
-    return NEW(1, _Class);
+    return class;
 }
-void ClassDeclAssertIsOk(char* className, Var classParamDecl ,Instr extendsDecl, Instr constructorBody, Var fieldDecl, Method methodDecl){
-    printf("Not implemented\n");
+
+void ClassDeclAssertIsOk(char* className, Var classParamDecl ,ClassCall extendsCall, Instr constructorBody, Var fieldDecl, Method methodDecl){
+    char* message[128];
+    
+    /* Toute nouvelle class créée ne doit pas deja Exister  */
+    Class c = GetClassByName(className);
+    if ( c != NULL ){ 
+        sprintf(message, "Classe %s deja définie", className);
+        PrintError(message);
+        exit(1);
+     }
+     
+    /* Une classe ne peut pas extends elle meme */
+    if ( extendsCall != NULL && strcmp(className, extendsCall->class->name) == 0 ) {
+        sprintf(message, "La classe %s ne peut pas s'etendre elle meme", className);
+        PrintError(message);
+        exit(1);
+    }
+    
+    
 }       
-Class ClassDecl(char* className, Var classParamDecl ,Instr extendsDecl, Instr constructorBody, Var fieldDecl, Method methodDecl){
-    printf("Not implemented\n");
-    return NEW(1, _Class);
+
+Class ClassDecl(char*     className,
+                Var       classParamDecl,
+                ClassCall extendsCall, 
+                Instr     constructorBody, 
+                Var       fieldDecl, 
+                Method    methodDecl) {
+    
+    Class class =  NEW(1, _Class);
+    class->name       = className;
+    class->consParams = classParamDecl;
+    class->extends    = extendsCall;
+    class->consBody   = constructorBody;    
+    class->fields     = fieldDecl ;
+    class->methods    = methodDecl;
+    ClassRegisterInScope(class);
+    class->next       = NULL;  
+    ClassDefPrint(class);
+    
+    return class;
 }
        
    
@@ -126,53 +209,69 @@ Method MethodDecl(char* name, Var paramDecl, char* classType, Instr methodBody, 
 } 
  
 Method MethodDeclParamSetNext(Method method, Method next){
-    printf("Not implemented\n");
-    return NEW(1, _Method);
+    Method i = method; 
+    while ( i->next != NULL ) {    
+        i = i->next;
+    }
+    i->next = next;
+    return method; 
 } 
 
 
+Method MethodDeclSetNext(Method method, Method next){
+    Method i = method; 
+    while ( i->next != NULL ) {    
+        i = i->next;
+    }
+    i->next = next;
+    return method; 
+} 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void PrintError(char* message);
-
-void PrintError(char* message){
-    printf("[ Erreur ] %s\n", message );
+void ExprAssertIDIsOk(char* name) {
+    
 }
 
-ClassType IntegerType() {
-    ClassType IntegerType    = NEW(1, _ClassType);
-    IntegerType->name  = (char*) malloc( ID_NAME_MAX_SIZE * sizeof(char) ) ;
-    sprintf(IntegerType->name, "Integer");
-    IntegerType->extends = NULL;
-    return IntegerType;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ClassType StringType() {
+    ClassType StringType  = NEW(1, _ClassType);
+    StringType->name  = (char*) malloc( ID_NAME_MAX_SIZE * sizeof(char) ) ;
+    sprintf(StringType->name, "String");
+    StringType->extends = NULL;
+    return StringType;
 }
  
-Field IntegerFields() {
-    Field IntegerFields  = NEW(1, _Field);
+Var IntegerFields() {
+    Var IntegerFields  = NEW(1, _Var);
     IntegerFields->name  = (char*) malloc( ID_NAME_MAX_SIZE * sizeof(char) ) ;
     sprintf(IntegerFields->name, "value");
-    IntegerFields->type  = IntegerType();
+    IntegerFields->class  = Integer;
     IntegerFields->value = NULL;
     IntegerFields->next  = NULL;
     return IntegerFields;
+}
+
+Var StringFields() {
+    Var fields  = NEW(1, _Var);
+    fields ->name  = (char*) malloc( ID_NAME_MAX_SIZE * sizeof(char) ) ;
+    sprintf(fields->name, "value");
+    fields->class  = String;
+    fields->value = NULL;
+    fields->next  = NULL;
+    return fields ;
 }
 
 /* Renvoi TRUE si e1 et e2 sont de la meme classe modulo heritage et FALSE sinon*/
@@ -228,7 +327,7 @@ Expr ExprFromInt(int value) {
     expr->left = NULL; 
     expr->op = CONST_INT; 
     expr->value.i = value;
-    expr->type = IntegerType(); 
+    expr->type = Integer; 
     expr->right = NULL;
     
     return expr;
@@ -237,7 +336,7 @@ Expr ExprFromString(char* string){
     
     Expr expr = NEW(1, _Expr);
     expr->left = NULL; 
-    expr->op = CONST_INT; 
+    expr->op = CONST_STR; 
     expr->value.s = strdup(string);
     expr->type = NULL; 
     expr->right = NULL;
@@ -249,7 +348,11 @@ Expr ExprFromVar(){
     return expr;
 }
 Expr ExprSetNext(Expr expr, Expr next){
-    expr->next = next;
+    Expr i = expr; 
+    while ( i->next != NULL ) {    
+        i = i->next;
+    }
+    i->next = next;
     return expr; 
 }
 
@@ -261,20 +364,6 @@ Expr ExprFromBoolean(Expr left, int op, Expr right){
     expr->right = right;
     
     return expr;
-}
-
-
-
-Instr InstrSetNext(Instr instr, Instr next){
-    instr->next = next;
-    return instr; 
-}
-
-
-Instr InstrFromExpr(Expr expr){
-    Instr instr = NEW(1, _Instr);
-    instr->expr = expr;
-    return instr; 
 }
 
 Method IntegerAddMethod() {
@@ -304,30 +393,89 @@ Method IntegerMethods() {
     return IntegerMethods;
 }
 
+/* Renvoi la liste de toutes les methodes disponibles sur l'objet String */
+Method StringMethods() {
+    
+    return NULL;
+}
+
+Class initStringClass() {
+   
+    String = NEW(1, _Class);
+    String->name      = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(String->name, "String");
+    String->fields    = StringFields();
+    String->methods   = StringMethods();
+    String->consBody  = NULL;
+    String->consParams = String->fields;
+    String->extends   = NULL;
+    String->next      = NULL;
+    
+    return String;  
+}
+
+
+Class initVoidClass() {
+   
+    Void = NEW(1, _Class);
+    Void->name      = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(Void->name, "Void");
+    Void->fields    = NULL;
+    Void->methods   = NULL;
+    Void->consBody  = NULL;
+    Void->consParams = NULL;
+    Void->extends   = NULL;
+    Void->next      = NULL;
+    
+    return Void;  
+}
+
+
+Class initIntegerClass() {
+   
+    Integer = NEW(1, _Class);
+    Integer->name      = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(Integer->name, "Integer");
+    Integer->fields    = IntegerFields();
+    Integer->methods   = IntegerMethods();
+    Integer->consBody  = NULL;
+    Integer->consParams = Integer->fields;
+    Integer->extends   = NULL;
+    Integer->next      = NULL;
+    
+    return Integer;  
+}
+
+
 /* Cree les classes predefinies si elles ne sont pas deja définies 
  * par defaut et y ajoute la definition de la classe passée en paraletre 
  */
 Class defaultClassDefsPlus(Class classDefs) {
-    Class Integer    = NEW(1, _Class);
-    Integer->type    = IntegerType();
-    Integer->fields  = IntegerFields();
-    Integer->methods = IntegerMethods();
+   
+    Integer = initIntegerClass();
+    String  = initStringClass();
+    Void    = initVoidClass();
     
-    /* Class String     = NEW(1, _Class);
-    String->type     = StringType();
-    String->fields   = StringFields();
-    String->methods  = StringMethods();
-    
-    Class Void       = NEW(1, _Class);
-    String->type     = VoidType();
-    String->fields   = VoidFields();
-    String->methods  = VoidMethods(); */
-    /*
     Integer->next = String;
     Integer->next->next = Void;
-    Integer->next->next->next = classDefs; */
-    return Integer;  
+    Integer->next->next->next = classDefs;
+    
+    AllDefinedClasses = Integer;
+    return AllDefinedClasses;  
 }
+
+
+void ClassRegisterInScope(Class cl){
+     
+    if ( AllDefinedClasses == NULL ){
+        defaultClassDefsPlus(cl);
+    }
+    
+    Class i = AllDefinedClasses ;
+    while ( i->next != NULL ) {
+        i = i->next;        
+    }    
+    i->next = cl;
+}
+    
+
 void incPaddingNb(){
     PrintPaddingNb+= 4;
 }
@@ -352,7 +500,19 @@ Expr ExprArithmeticEval(Expr expr) {
         case SUB        : expr->value.i = leftTmp->value.i - rightTmp->value.i ;break ;            
         case DIV        : expr->value.i = leftTmp->value.i / rightTmp->value.i ;break ; 
         case MUL        : expr->value.i = leftTmp->value.i * rightTmp->value.i ;break ; 
+       
         default : PrintError("Evaluation Non pris en charge par la fonction : ExprArithmeticEval\n "); break;     
+    }
+    return expr;         
+}
+
+Expr ExprConcatEval(Expr expr) {
+    Expr rightTmp, leftTmp;
+    leftTmp  =  ExprEval(expr->left); 
+    rightTmp =  ExprEval(expr->right); 
+    switch(expr->op) {
+        case CONCAT     : expr->value.s=strcat(leftTmp->value.s,rightTmp->value.s);break;
+        default : PrintError("Erreur non concat : E\n "); break;     
     }
     return expr;         
 }
@@ -368,6 +528,7 @@ Expr ExprEval(Expr expr) {
         case SUB        :           
         case DIV        :
         case MUL        : return ExprArithmeticEval(expr); 
+        case CONCAT     : return ExprConcatEval(expr);         
         default : printf("Evaluation Non encore implementée \n "); break;     
     }
     return expr;     
@@ -383,6 +544,7 @@ void ExprPrintResult(Expr expr) {
         case CONST_INT  : printf("Integer = %d\n", expr->value.i);break;
         case CONST_VOID : printf("Void = void\n"); break;
         case CONST_STR  : printf("String = %s\n", expr->value.s);break;
+        case CONCAT     : printf("String = %s\n", expr->value.s);break;
         default : printf("Affichage Non encore implementé \n "); break;     
     }
 }
@@ -420,29 +582,72 @@ void ExprPrint(Expr expr) {
 }
 
 void InstrPrint(Instr inst) {
+    
+    Instr instrs = inst;
     incPaddingNb();
-    printPadding();printf("Instruction : \n");
-    ExprPrint(inst->expr);
+    while (instrs != NULL) {
+        printPadding();
+        switch(instrs->op) {
+            case EXPR       : printf("Expression\n");   printPadding();   ExprPrintResult(ExprEval(instrs->expr)) ; break;
+            case ASSIGN     : printf("Assign \n"); break;
+            case INSTR_BLOC : printf("Bloc Instruction \n"); InstrPrint(instrs->listInstr); break;
+            case PROC_BLOC  : printf("Bloc Procedural \n"); InstrPrint(instrs->listInstr); break;
+            case FN_BLOC    : printf("Bloc Fonctionel\n"); InstrPrint(instrs->listInstr); break;
+            case IF         : printf("If Then Else\n"); break;
+            
+            default : printf("Affichage de L'instruction Non encore implementée \n "); break;     
+        }     
+        instrs = instrs->next; 
+    }    
     decPaddingNb();
 }
 
-void ClassPrint(Class cl) {
-    incPaddingNb();
-    printPadding();printf("Classe : \n");
-    decPaddingNb();
+void ClassDefPrint(Class cl) {
+    printPadding();printf("Defined Class : %s\n", cl->name);
 }
+
 void ProgramPrint(Program prg) {
     printPadding();printf("Programme\n");
-    ClassPrint(prg->classDefs);
-    InstrPrint(prg->instrs);
+    
+    Class classDefs = prg->classDefs;
+     while (classDefs != NULL) {
+        ClassDefPrint(classDefs);
+        classDefs = classDefs->next; 
+    }      
+    
+    Instr instrs = prg->instrs;
+    while (instrs != NULL) {
+        InstrPrint(instrs);
+        instrs = instrs->next; 
+    }    
+}
+
+void InstrEval(Instr instrs) { 
+
+    switch(instrs->op) {
+        case EXPR       : printf("Expr \n"); ExprPrintResult(ExprEval(instrs->expr)); break;
+        case ASSIGN     : printf("Assign \n"); break;
+        case PROC_BLOC  : printf("Proc Bloc \n"); break;
+        case FN_BLOC    : printf("Fn Bloc \n"); break;
+        case IF         : printf("If \n"); break;
+        
+        default : printf("Evaluation de L'instruction Non encore implementée \n "); break;     
+    }  
+}
+void ProgramEval(Program program){
+    Instr instrs = program->instrs;
+    while (instrs != NULL) {
+        InstrEval(instrs)  ; 
+        instrs = instrs->next; 
+    }
 }
 
 Program makeProgram(Class classDefs, Instr instrs){
     Program program = NEW(1, _Program);
-    program->classDefs = defaultClassDefsPlus(classDefs);
+    program->classDefs = AllDefinedClasses;
     program->instrs = instrs;
-    /*ProgramPrint(program); */
-    ExprPrintResult(ExprEval(program->instrs->expr)); 
+   /* ProgramPrint(program);
+    ProgramEval(program); */
     return program;
 }
 

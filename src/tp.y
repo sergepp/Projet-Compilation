@@ -1,15 +1,19 @@
-/* les tokens ici sont ceux supposes etre renvoyes par l'analyseur lexical
+/* 
+ * les tokens ici sont ceux supposes etre renvoyes par l'analyseur lexical
  * A adapter par chacun en fonction de ce qu'il a ecrit dans tp.l
  * Bison ecrase le contenu de tp_y.h a partir de la description de la ligne
  * suivante. C'est donc cette ligne qu'il faut adapter si besoin, pas tp_y.h !
+ *
  */
 %token IS CLASS EXTENDS RETURN RETURNS DEF STATIC OVERRIDE VAR YIELD CONCAT NEW IF THEN ELSE ADD SUB MUL DIV CONST_VOID
 %token <S> ID CONST_STR	CLASS_TYPE  /* voir %type ci-dessous pour le sens de <S> et Cie */
 %token <I> CONST_INT RELOP
 
-/* indications de precedence d'associativite. Les operateurs sur une meme
+/* 
+ * indications de precedence d'associativite. Les operateurs sur une meme
  * ligne (separes par un espace) ont la meme priorite. Les ligns sont donnees
  * par precedence croissante d'operateurs.
+ *
  */
 %nonassoc ELSE
 %nonassoc THEN
@@ -29,7 +33,8 @@
 %left '{' '}'
 
 
-/* voir la definition de YYSTYPE dans main.h 
+/** 
+ * Voir la definition de YYSTYPE dans main.h 
  * Les indications ci-dessous servent a indiquer a Bison que les "valeurs" $i
  * ou $$ associees a ces non-terminaux doivent utiliser la variante indiquee
  * de l'union YYSTYPE (par exemple la variante D ou S, etc.)
@@ -37,14 +42,26 @@
  */
 %type <Expr>        expr booleanExpr arithmExpr  constant  Opt_L_expr L_expr instanciation  concatExpr returnExpr  selection
 %type <Program>     program
-%type <Class>       L_classDecl classDecl  
+%type <ClassCall>   Opt_extendsDecl extendsDecl
+%type <Class>       L_classDecl classDecl 
 %type <Var>         L_varDecl varDecl L_fieldDecl fieldDecl  Opt_L_classParamDecl L_classParamDecl classParamDecl L_methodParamDecl methodParamDecl 
 %type <Method>      L_methodDecl methodDecl 
-%type <Instruction> proceduralBloc functionalBloc L_instr instr instructionBloc  methodBody  Opt_constructorBody constructorBody Opt_L_methodParamDecl extendsDecl Opt_extendsDecl
+%type <Instruction> proceduralBloc functionalBloc L_instr instr instructionBloc  methodBody  Opt_constructorBody constructorBody Opt_L_methodParamDecl
 %{
 #define YYDEBUG 1
+
+
 #include "type.h"
-#include "tp.h"     /* les definition des types et les etiquettes des noeuds */
+#include "tp.h"
+#include "tp_y.h"
+
+extern Class Integer;
+
+extern Class String;
+
+extern Class Void;
+
+extern Class AllDefinedClasses; 
 
 extern int yylex();	/* fournie par Flex */
 extern void yyerror();  /* definie dans tp.c */
@@ -103,10 +120,10 @@ Opt_extendsDecl :   { $$ = NULL; }
 ;
 extendsDecl : EXTENDS CLASS_TYPE '(' Opt_L_expr ')' { ExtendsDeclAssertIsOk($2, $4); $$ = ExtendsDecl($2, $4); }
 ;
-Opt_constructorBody : { $$ = NULL }
+Opt_constructorBody : { $$ = NULL; }
     | constructorBody { $$ = $1;  }
 ;
-constructorBody : instructionBloc { ConstructorBodyAssertIsOk($1); $$ = $1; }
+constructorBody : instructionBloc { $$ = $1; }
 ;
 
 
@@ -115,7 +132,7 @@ constructorBody : instructionBloc { ConstructorBodyAssertIsOk($1); $$ = $1; }
 L_fieldDecl : fieldDecl 
     | L_fieldDecl fieldDecl  
 ;
-fieldDecl :  varDecl                                {  $$ = $1 }
+fieldDecl :  varDecl                                {  $$ = $1; }
     | VAR STATIC ID ':' CLASS_TYPE ASSIGN expr ';'  {  StaticVarDeclAssertIsOk($3, $5, $7);   $$ = StaticVarDecl($3, $5, $7);   }
     | VAR STATIC ID ':' CLASS_TYPE ';'              {  StaticVarDeclAssertIsOk($3, $5, NULL); $$ = StaticVarDecl($3, $5, NULL); }
 ;
@@ -146,9 +163,10 @@ methodBody :  proceduralBloc                        { $$ = $1; }
 
 // Declaration d'un bloc d'instruction 
 instructionBloc : '{'  '}'                          { $$ = NULL; }
-    | '{' L_instr '}'                               { InstrAssertProcBlocIsOk(NULL, $2);      $$ = $2; }
+    | '{' L_instr '}'                               { InstrAssertProcBlocIsOk(NULL, $2);      $$ = InstrFromInstrBloc($2); }
 ;
-proceduralBloc : instructionBloc                    { $$ = $1; }
+proceduralBloc :  '{'  '}'                          { $$ = NULL; }
+    |   '{' L_instr '}'                             { InstrAssertProcBlocIsOk(NULL, $2);      $$ = InstrFromInstrBloc($2);  }
     |   '{' L_varDecl IS L_instr '}'                { InstrAssertProcBlocIsOk($2, $4);        $$ = InstrFromProcBloc($2, $4); }
 ;    
 
@@ -201,18 +219,18 @@ constant : CONST_STR            { $$ = ExprFromString($1);  }
 instanciation : NEW CLASS_TYPE '(' Opt_L_expr ')'   { ExprAssertInstanciationIsOk($2, $4);  $$ = ExprFromInstanciation($2, $4); }
 ;
 
-arithmExpr : expr ADD expr      { ExprAssertInheritsType(IntegerType(), $1,$3);  $$ = ExprFromArithmetic($1, ADD, $3); }
-    | expr SUB expr             { ExprAssertInheritsType(IntegerType(), $1,$3);  $$ = ExprFromArithmetic($1, SUB, $3); }
-    | expr MUL expr             { ExprAssertInheritsType(IntegerType(), $1,$3);  $$ = ExprFromArithmetic($1, MUL, $3); }
-    | expr DIV expr             { ExprAssertInheritsType(IntegerType(), $1,$3);  $$ = ExprFromArithmetic($1, DIV, $3); }
-    | SUB expr %prec UNARY      { ExprAssertInheritsType(IntegerType(), $2);     $$ = ExprFromArithmetic(ExprFromInt(0), SUB, $2); } 
-    | ADD expr %prec UNARY      { ExprAssertInheritsType(IntegerType(), $2);     $$ = $2; }   
+arithmExpr : expr ADD expr      { ExprAssertInheritsType(Integer, $1,$3);  $$ = ExprFromArithmetic($1, ADD, $3); }
+    | expr SUB expr             { ExprAssertInheritsType(Integer, $1,$3);  $$ = ExprFromArithmetic($1, SUB, $3); }
+    | expr MUL expr             { ExprAssertInheritsType(Integer, $1,$3);  $$ = ExprFromArithmetic($1, MUL, $3); }
+    | expr DIV expr             { ExprAssertInheritsType(Integer, $1,$3);  $$ = ExprFromArithmetic($1, DIV, $3); }
+    | SUB expr %prec UNARY      { ExprAssertInheritsType(Integer, $2);     $$ = ExprFromArithmetic(ExprFromInt(0), SUB, $2); } 
+    | ADD expr %prec UNARY      { ExprAssertInheritsType(Integer, $2);     $$ = $2; }   
 ;
 
-booleanExpr : expr RELOP expr   { ExprAssertInheritsType(IntegerType(), $1,$3);  $$ = ExprFromBoolean($1, yylval.I, $3); }
+booleanExpr : expr RELOP expr   { ExprAssertInheritsType(Integer, $1,$3);  $$ = ExprFromBoolean($1, yylval.I, $3); }
 ;
 
-L_varDecl : varDecl         { $$ = $1 }
+L_varDecl : varDecl         { $$ = $1; }
     |  L_varDecl varDecl    { $$ = InstrSetNext($1, $2); }
 ;
 varDecl : VAR ID ':' CLASS_TYPE ASSIGN expr ';' { InstrAssertVarDeclIsOk($2, $4, $6);            $$ = InstrFromVarDecl($2, $4, $6);   }
