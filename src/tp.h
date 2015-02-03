@@ -8,34 +8,11 @@ typedef int bool;
 #define NEW(howmany, type) (type *) calloc((unsigned) howmany, sizeof(type))
 #define NIL(type) (type *) 0
 
-/* la structure d'un arbre (noeud ou feuille) */
-typedef struct _Tree {
-  short op;         /* etiquette de l'operateur courant */
-  short nbChildren; /* nombre de sous-arbres */
-  union {
-    char *str;      /* valeur de la feuille si op = ID ou STR */
-    int val;        /* valeur de la feuille si op = CST */
-    struct _Tree **children; /* tableau des sous-arbres */
-  } u;
-  struct _Tree* next ; 
-} Tree, *TreeP;
-
-
-/* la structure ci-dessous permet de memoriser des listes variable/valeur */
-typedef struct _Decl
-{ char *name;
-  int val;
-  struct _Decl *next;
-} VarDecl, *VarDeclP;
-
-
 /* Etiquettes additionnelles pour les arbres de syntaxe abstraite.
  * Les tokens tels que ADD, SUB, etc. servent directement d'etiquette.
  * Attention donc a ne pas donner des valeurs identiques a celles des tokens
  * produits par Bison dans le fichier tp_y.h
- */
-  
-  
+ */  
 #define STATIC_FIELD_ACCESS     1
 #define INSTANCE_FIELD_ACCESS   2
 #define STATIC_METHOD_CALL      3
@@ -57,6 +34,8 @@ typedef struct _Decl
 #define PROC_BLOC 17
 #define EXPR 18
 #define INSTR_BLOC 19
+#define VAR_DECL 20
+#define VAR_CALL 21
 
 /* Codes d'erreurs */
 #define SUCCESS     0
@@ -80,14 +59,13 @@ typedef union
   char C;
   char *S;
   int I; 
-  TreeP T;
   Expr Expr;
   Class     Class;
   Param     Param;
   Var       Var;
   Method    Method;
   Program   Program;
-  Instr     Instruction;
+  Instr     Instr;
   ClassCall ClassCall;
 } YYSTYPE;
 
@@ -101,30 +79,7 @@ int arrayContainsStr(char * strArray[], char* str);
 
 #define YYSTYPE YYSTYPE
 
-/* construction des declarations */
-VarDeclP makeVar(char *name);
-VarDeclP declVar(char *name, TreeP tree, VarDeclP currentScope);
-
 /* construction pour les arbres */
 Program makeProgram(Class classDefs, Instr instrs);
 
-TreeP makeLeafStr(short op, char *str);
-TreeP makeLeafInt(short op, int val);
-TreeP makeTree(short op, int nbChildren, ...);
-TreeP makeLeafVoid(short op);
-TreeP makeFakeTree();
 
-/* Ajoute l'arbre tail à l'arbre head et renvoie head, Apres cette operation
- * head a comme elements suivant les elements de tail*/
-TreeP addNext(TreeP head, TreeP tail);
-
-
-/* evaluateur d'expressions */
-int evalMain(TreeP tree, VarDeclP lvar);
-VarDeclP evalDecls (TreeP tree);
-
-/* ecriture formatee */
-void pprintVar(VarDeclP decl, TreeP tree);
-void pprintValueVar(VarDeclP decl);
-void pprint(TreeP tree);
-void pprintMain(TreeP);

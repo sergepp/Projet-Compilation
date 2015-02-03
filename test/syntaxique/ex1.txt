@@ -1,8 +1,36 @@
-class Serge(){} is {}
-class ITRRntegerP(){} is {}
-class Sergeh(){} is {}
-class SergeP() extends Void() {} is {}
-{
-      x := 2;
-      
+
+
+
+
+class Point(xc: Integer, yc: Integer, po:String) { 
+    xc := xc ;
+    yc := xc; 
+    cpt := cpt + 1;
+    rt := 8;
+    rt := 0;
+    rt1 := 0;
+    rt2:= 0;
+} is { 
+    var static cpt: Integer := 9;
+    var rt: Integer := 0;
+    var rt1: Integer := 0;
+    var rt2: Integer := 0;
 }
+class PointColore(){} is {}
+class Forme(){} is {}
+class Polygone(){} is {}
+class Rectangle(xc: Integer, yc: Integer) extends Cercle(zc) {} is {}
+
+
+
+{
+     var x : Integer := 2;
+     var z : Integer := 2*z + 1; 
+     var e : String := "Hola, Hola we dem boyz";
+     var w : Integer := 0;
+      
+     is
+     
+     x + z + 1;           
+}
+

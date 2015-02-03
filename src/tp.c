@@ -25,17 +25,22 @@ extern char *strdup(const char *);
 #include "type.h"
 #include "tp.h"
 #include "tp_y.h"
-#include "instruction.c"
-#include "expr.c"
-#include "type.c"
+
+#include "instr.h"
+#include "scope.h"
+#include "expr.h"
+#include "var.h"
+#include "class.h"
+
+
+
+
 extern int yyparse(); 
    
 extern int yylineno;
 
 extern int yydebug;
 
-int eval(TreeP tree, VarDeclP decls);
-TreeP getChild(TreeP tree, int rank);
 
 /* Niveau de 'verbosite'.
  * Par defaut, n'imprime que le resultat et les messages d'erreur
@@ -62,7 +67,9 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Error: Cannot open %s\n", "../test/syntaxique/ex1.txt");
     exit(USAGE_ERROR);
   }                 
-    
+  /* Initialisations */
+  initializeScope();
+  
   /* redirige l'entree standard sur le fichier.   .. */
   close(0); dup(fi); close(fi);
 
@@ -108,190 +115,11 @@ void yyerror(char *ignore) {
 }
 
 
-/* Tronc commun pour la construction d'arbre */
-TreeP makeNode(int nbChildren, short op) {
-  TreeP tree = NEW(1, Tree);
-  tree->op = op;
-  tree->nbChildren = nbChildren;
-  tree->u.children = nbChildren > 0 ? NEW(nbChildren, TreeP) : NIL(TreeP);
-  return(tree);
-}
+#include "var.c"
+#include "type.c"
+#include "expr.c"
+#include "instr.c"
+#include "scope.c"
+#include "class.c"
 
 
-/* Construction d'un arbre a nbChildren branches, passees en parametres */
-TreeP makeTree(short op, int nbChildren, ...) {
-  va_list args;
-  int i;
-  TreeP tree = makeNode(nbChildren, op); 
-  va_start(args, nbChildren);
-  for (i = 0; i < nbChildren; i++) { 
-    tree->u.children[i] = va_arg(args, TreeP);
-  }
-  va_end(args);
-  return(tree);
-}
-
-
-/* Retourne le rankieme fils d'un arbre (de 0 a n-1) */
-TreeP getChild(TreeP tree, int rank) {
-  return tree->u.children[rank];
-}
-
-
-/* Constructeur de feuille dont la valeur est une chaine de caracteres
- * (un identificateur de variable).
- */
-TreeP makeLeafStr(short op, char *str) {
-  TreeP tree = makeNode(0, op);
-  tree->u.str = str;
-  return(tree);
-}
-
-
-/* Constructeur de feuille dont la valeur est un entier */
-TreeP makeLeafInt(short op, int val) {
-  TreeP tree = makeNode(0, op); 
-  tree->u.val = val;
-  return(tree);
-}
-
-/* Constructeur de feuille dont la valeur est void */
-TreeP makeLeafVoid(short op) {
-  /* Cette fonction se contente juste de creer une feuille de type String
-   * dont l'operateur est op et la valeur est NULL */
-  return makeLeafStr(op, NULL);
-}
-
-TreeP makeFakeTree() {
-    return NULL;
-}
-
-/* Ajoute l'arbre tail à l'arbre head et renvoie head, Apres cette operation
- * head a comme elements suivant les elements de tail*/
-TreeP addNext(TreeP head, TreeP tail) {
-    head->next = tail;
-    return head; 
-}
-
-/*
- * Seconde partie probablement a modifier
- */
-
-/* Fonctions Utilitaires definie dans tp.h */
-
-/* Renvoi TRUE si la chaine de caractere str est contenue dans le tableau 
- * strArray et FALSE sinon
- */
-int arrayContainsStr(char ** strArray, char* str) {
-  int len = sizeof(strArray)/sizeof(strArray[0]);
-  int i;
-  for(i = 0; i < len; ++i)
-    if(!strcmp(strArray[i], str)) return TRUE;
-    
-  return FALSE;
-} 
-
-/* Retourne TRUE si le parametre str est un mot clé et FALSE sinon */
-/*
-int isKeyWord(char *str) {
-  return arrayContainsStr(KEYWORDS_LIST, str)
-} 
-*/
-
-
-
-
-
-/* Avant evaluation, verifie si tout id qui apparait dans tree a bien ete declare
- * et est donc dans lvar.
- * On impose que ca soit le cas y compris si on n'a pas besoin a l'evaluation de
- * la valeur de cet id.
- */
-bool checkScope(TreeP tree, VarDeclP lvar) {
-  return FALSE;
-}
-
-/* Verifie si besoin que nouv n'apparait pas deja dans list. l'ajoute en
- * tete et renvoie la nouvelle liste
- */
-VarDeclP addToScope(VarDeclP list, VarDeclP nouv) {
-  return NIL(VarDecl);
-}
-
-
-/* Construit le squelette d'un couple (variable, valeur), sans la valeur. */
-VarDeclP makeVar(char *name) {
-  VarDeclP res = NEW(1, VarDecl);
-  res->name = name; res->next = NIL(VarDecl);
-  return(res);
-}
-
-
-/* Associe une variable a l'expression qui definit sa valeur, et procede a 
- * l'evaluation de cette expression, sauf si on est en mode noEval
- */
-VarDeclP declVar(char *name, TreeP tree, VarDeclP currentScope) {
-  return NIL(VarDecl);
-}
-
-
-/* Evaluation d'une variable */
-int evalVar(TreeP tree, VarDeclP decls) {
-  return 0;
-}
-
-
-/* Evaluation d'un if then else. Attention a n'evaluer que la partie necessaire ! */
-int evalIf(TreeP tree, VarDeclP decls) {
-  return 0;
-}
-
-
-VarDeclP evalAff (TreeP tree, VarDeclP decls) {
-  return NIL(VarDecl);
-}
-
-
-/* Ici decls correspond au sous-arbre qui est la partie declarative */
-VarDeclP evalDecls (TreeP tree) {
-  return NIL(VarDecl);
-}
-
-
-/* Evaluation par parcours recursif de l'arbre representant une expression. 
- * Les valeurs des identificateurs situes aux feuilles de l'arbre sont a
- * rechercher dans la liste decls
- * Attention a n'evaluer que ce qui doit l'etre et au bon moment
- * selon la semantique de l'operateur (cas du IF, etc.)
- */
-int eval(TreeP tree, VarDeclP decls) {
-  if (tree == NIL(Tree)) { exit(UNEXPECTED); }
-       switch (tree->op) {
-  case ID:
-    return evalVar(tree, decls);
-  case EQ:
-    return (eval(getChild(tree, 0), decls) == eval(getChild(tree, 1), decls));
-  case NEQ:
-    return (eval(getChild(tree, 0), decls) != eval(getChild(tree, 1), decls));
-  case ADD:
-    return (eval(getChild(tree, 0), decls) + eval(getChild(tree, 1), decls));
-  case SUB:
-    return (eval(getChild(tree, 0), decls) - eval(getChild(tree, 1), decls));
-  case IF:
-    return evalIf(tree, decls);
-  default: 
-    fprintf(stderr, "Erreur! etiquette indefinie: %d\n", tree->op);
-    exit(UNEXPECTED);
-  }
-}
-
-int evalMain(TreeP tree, VarDeclP lvar) {
-  int res;
-  if (noEval) {
-    fprintf(stderr, "\nSkipping evaluation step.\n");
-  } else {
-      res = eval(tree, lvar);
-      printf("\n/*Result: %d*/\n", res);
-  }
-  return errorCode;
-}

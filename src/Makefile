@@ -1,6 +1,7 @@
-OBJ=tp.o tp_l.o tp_y.o print.o
+OBJ=tp.o tp_l.o tp_y.o
 CC=gcc
-CFLAGS=-Wall -ansi -I./ -g 
+#CFLAGS=-Wall -ansi -I./ -g 
+CFLAGS=  
 LDFLAGS= -g -lfl
 tp : $(OBJ)
 	$(CC) -o tp $(OBJ) $(LDFLAGS)
@@ -16,9 +17,6 @@ tp.c :
 
 tp.o: tp.c tp_y.h tp.h
 	$(CC) $(CFLAGS) -c tp.c
-
-print.o: print.c tp_y.h tp.h
-	$(CC) $(CFLAGS) -c print.c
 
 tp_l.o: tp_l.c tp_y.h
 	$(CC) $(CFLAGS) -c tp_l.c
