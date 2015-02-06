@@ -23,8 +23,6 @@ Var StringFields() {
     fields ->name  = (char*) malloc( ID_NAME_MAX_SIZE * sizeof(char) ) ;
     sprintf(fields->name, "value");
     fields->class  = String;
-    fields->value = NULL;
-    fields->next  = NULL;
     return fields ;
 }
 
@@ -32,15 +30,9 @@ Var StringFields() {
 Method IntegerAddMethod() {
     Method IntegerMethod = NEW(1, _Method); 
     IntegerMethod->name  = (char*) malloc( ID_NAME_MAX_SIZE * sizeof(char) ) ; 
-    sprintf(IntegerMethod->name, "+");    
-    IntegerMethod->isOverride = FALSE; 
-    IntegerMethod->isStatic = FALSE;
-    IntegerMethod->paramsCount = 1;
-    IntegerMethod->params = NULL;    
-    IntegerMethod->next = NULL;    
-    IntegerMethod->this = NULL;
-    IntegerMethod->body = ExprFromArithmetic(IntegerMethod->this, ADD, IntegerMethod->params);
-    
+    sprintf(IntegerMethod->name, "+");
+    IntegerMethod->bodyExpr = NULL; /* ExprFromArithmetic(IntegerMethod->this, ADD, IntegerMethod->params);
+    */
     return IntegerMethod;
 }
 
@@ -141,15 +133,21 @@ void ProgramEval(Program program){
     }
 }
 
+void ProgramTypeAndRedirect(Program program){
+    ClassTypeAndRedirect(program->classDefs->next->next->next->next->next->next->next);
+    /* InstrTypeAndRedirect(program->instrs); */
+}
+
 
 Program makeProgram(Class classDefs, Instr instrs){
     Program program = NEW(1, _Program);
     program->classDefs = AllDefinedClasses;
     program->instrs = instrs;
-    /*ProgramPrint(program);*/
+    /* ProgramPrint(program); */
     printf("\n");
-    ScopePrint(MainScope);
-    ProgramEval(program);
+    /* ScopePrint(MainScope); */
+    ProgramTypeAndRedirect(program);
+    /* ProgramEval(program); */
     return program;
 }
 

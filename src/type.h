@@ -14,11 +14,12 @@ typedef struct __Var {
   struct __Expr* value;
   struct __Var* next ; 
   bool isStatic;
+  int lineno;
 } _Var, *Var;
 
 
 typedef struct __Scope {
-    Var declaredVars;
+    Var var;
     char* name;
     struct __Scope* prev; 
     struct __Scope* next; 
@@ -40,11 +41,13 @@ typedef struct __Expr {
   struct __Class* type;
   Scope scope;
   int lineno;
+  bool isEvaluated;
   struct __Expr* left;
   int op;
   union {
-    char *s;      /* valeur de la feuille si op = CONST_STR ou VAR_CALL */
-    int i;        /* valeur de la feuille si op = CONST_INT */
+    char *s;                    /* valeur de la feuille si op = CONST_STR ou VAR_CALL ou SELECTION*/
+    int i;                      /* valeur de la feuille si op = CONST_INT */
+    struct __Class* instance;   /* Valeur de la feuille si op = INSTANCE*/
   } value; 
   struct __Expr* right; 
   struct __Expr* next ; 
@@ -62,11 +65,12 @@ typedef struct __Field {
 typedef struct __Instr {  
   int op;
     Scope scope;
+    
     Expr expr;                  /* valeur de la feuille si op = EXPR */
     Expr yield;                 /* valeur de la feuille si op = FN_BLOC */
     Var var;                    /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC ou VAR_DECL */
-    struct __Instr* listInstr;  /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC */                   
-    Expr leftExpr;              /* valeur de la feuille si op = ASSIGN */
+    struct __Instr* listInstr;  /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC ou INSTR_BLOC */                   
+    Expr leftExpr;              /* valeur de la feuille si op = ASSIGN  ou SELECTION*/
     Expr rightExpr;             /* valeur de la feuille si op = ASSIGN */    
     Expr cond;                  /* valeur de la feuille si op = IF */
     struct __Instr* thenInstr;
@@ -77,29 +81,26 @@ typedef struct __Instr {
 
 
 typedef struct __Method {
+  
   char* name;
-  bool isOverride;
-  bool isStatic;
-  Expr params;
-  Expr body;
-  Expr this;
-  int paramsCount;
-  ClassType returnType;
-  Expr returnValue;
+  bool  isOverride;
+  bool  isStatic;
+  Var   params;
+  struct __Class* class;
+  Scope scope;
+  Expr  bodyExpr;
+  Instr bodyInstr;
+  char* returnClassName;
   
   struct __Method* next ; 
+  
 } _Method, *Method;
-
-
-typedef struct __ClassCall {
-  struct __Class* class;
-  Expr args;
-} _ClassCall, *ClassCall;
+ 
 
 typedef struct __MethodCall {
   struct __Class* class;
   Expr args;
-  char* name;
+  char* methodName;
 } _MethodCall, *MethodCall;
 
 
@@ -112,9 +113,9 @@ typedef struct __Class {
   Method methods;
   Var consParams;
   Instr consBody;
-  ClassCall extends;
+  MethodCall extends;
   Expr extendsParams;
- 
+    
   struct __Class* next ; 
 } _Class, *Class;
 
@@ -140,6 +141,11 @@ Scope MainScope;
 
 Scope currentScope ;
 
+Class CurrentClass;
+
+Expr This; 
+
+char* CurrentMethodName;
 
 void PrintError(char* message,  int lineno);
  

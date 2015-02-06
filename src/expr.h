@@ -24,13 +24,15 @@ Expr ExprFromConcat(Expr e1, Expr e3);
 void ExprAssertInstanciationIsOk(char* className, Expr e);
 
 
+Expr ExprThis();
+
 void AssertExprIsValid(Expr expr);
 
 
 Expr ExprFromInstanciation(char* className, Expr e);
-
-void ExprAssertInheritsType(Class ct, ...);
-
+ 
+ void ExprAssertInheritsType(Class ct, Expr e);
+ 
 bool IsVarInClassScope(char* varName, Class class);
 
 

@@ -1,11 +1,39 @@
-void ExprAssertFieldAccessIsOk(Expr e1, char* name){
-    printf("ExprAssertFieldAccessIsOk Not implemented\n");
+void ExprAssertFieldAccessIsOk(Expr e, char* name){
+    char message[128];
+    
+    Var field;
+    
+    if ( e->type != NULL ) {
+        field = ClassGetFieldByName(e->type, name);
+        if ( field == NULL ) {
+            sprintf(message, "Impossible d'acceder au champ %s  de l'instance de la classe %s", name, e->type->name);
+            PrintError(message, e->lineno);
+            exit(1);
+        }
+    }
 }
 
-Expr ExprFromFieldAccess (Expr e1,char* name){
-    return e1;
-    printf("ExprFromFieldAccess Not implemented\n");
+
+Expr ExprFromFieldAccess(Expr e, char* name){
+        
+    /*
+    printf("Dans la fonction ExprFromFieldAccess\n");
+  
+    Var field ;
+    field = ClassGetFieldByName(e->type, name);
+    */
+    Expr expr = NEW(1, _Expr);
+    expr->left = e; 
+    expr->op = SELECTION;
+    /*
+    expr->right = field->value;
+    expr->type = field->value->type;  */
+    expr->value.s = name;
+    expr->isEvaluated = TRUE;
+    expr->lineno = yylineno;
+    return expr;
 }
+
 
 void AssertExprIsValid(Expr expr){
     char message[128];
@@ -29,7 +57,7 @@ void AssertExprIsValid(Expr expr){
                      exit(1);
                 }
                 break;
-            default : printf("AssertExprIsValid non encore implemente pour l'operateur de l'expression\n "); break;     
+            default : printf("AssertExprIsValid non encore implemente pour l'operateur de l'expression  : op %d \n ", expr->op); break;     
         }
         /* Ses types sont compatibles pour toutes les operations qu'elle contient */
     }
@@ -77,7 +105,7 @@ Expr ExprFromMethodAccess(Expr e1,char* name, Expr e5){
 }
 
 void ExprAssertMethodAccessIsOk(Expr e1,char* name, Expr e5){
-    printf("ExprAssertMethodAccessIsOk Not implemented\n");
+    printf("ExprAssertMethodAccessIsOk Not Implemented\n");
 }
 
 
@@ -87,23 +115,31 @@ Expr ExprFromConcat(Expr e1, Expr e3){
     expr->left = e1; 
     expr->op = CONCAT; 
     expr->right = e3;
+    
+    expr->type = String; 
+    expr->isEvaluated = FALSE;
     expr->lineno = yylineno;
     
     return expr;
-    
 }
 
 void ExprAssertInstanciationIsOk(char* className, Expr e){
-    printf("ExprAssertInstanciationIsOk Not implemented\n");
+    printf("ExprAssertInstanciationIsOk Not Implemented\n");
 }
 
 Expr ExprFromInstanciation(char* className, Expr e){
-    printf("ExprFromInstanciation Not Implemented\n");
-    return e;
+    Expr expr = ClassNewInstanceOf(className, e);
+    return expr;
 }
 
-void ExprAssertInheritsType(Class ct, ...){
-     printf("ExprAssertMethodAccessIsOk Not implemented\n");
+void ExprAssertInheritsType(Class ct, Expr e){
+    char message[128];
+    printf("Dans la fonction  ExprAssertInheritsType\n");
+    if ( ClassLeftInheritsRight(e->type, ct) != FALSE ) {
+        sprintf(message, "Types incompatibles pour cette operation");
+        PrintError(message, e->lineno);
+        exit(1);
+    }
 }
 
 void ExprAssertAllVarsAreDeclaredInScope(Expr expr, Class class) {
@@ -144,7 +180,8 @@ Expr ExprFromArithmetic(Expr left, int op, Expr right){
     expr->left = left; 
     expr->op = op; 
     expr->right = right;
-    expr->type = NULL;  
+    expr->type = Integer;  
+    expr->isEvaluated = FALSE;
     expr->lineno = yylineno;
     return expr;
 }
@@ -172,7 +209,8 @@ Expr ExprFromVoid(){
     expr->left = NULL; 
     expr->op = CONST_VOID;
     expr->right = NULL;
-    expr->type = NULL; 
+    expr->type = Void; 
+    expr->isEvaluated = TRUE;
     expr->lineno = yylineno;
     return expr;
 }
@@ -183,27 +221,33 @@ Expr ExprFromInt(int value) {
     expr->op = CONST_INT; 
     expr->value.i = value;
     expr->type = Integer; 
-    expr->right = NULL;
+    expr->isEvaluated = TRUE;
     expr->lineno = yylineno;  
     return expr;
 }
+
 Expr ExprFromString(char* string){
     
     Expr expr = NEW(1, _Expr);
     expr->left = NULL; 
     expr->op = CONST_STR; 
     expr->value.s = strdup(string);
-    expr->type = NULL; 
+    expr->type = String; 
     expr->right = NULL;
+    expr->isEvaluated = TRUE;
     expr->lineno = yylineno;    
     return expr;
 }
 Expr ExprFromVar(char* varName){
+
+    /*    printf("Dans la fonction ExprFromVar\n"); */
     Expr expr = NEW(1, _Expr);
     expr->op = VAR_CALL;
     expr->value.s = varName;
+    expr->isEvaluated = FALSE;
     expr->lineno = yylineno;
     return expr;
+    
 }
 Expr ExprSetNext(Expr expr, Expr next){
     Expr i = expr; 
@@ -218,7 +262,9 @@ Expr ExprFromBoolean(Expr left, int op, Expr right){
     Expr expr = NEW(1, _Expr);
     expr->left = left; 
     expr->op = op; 
-    expr->type = NULL; 
+    expr->type = Integer; 
+    
+    expr->isEvaluated = FALSE;
     expr->right = right;
     expr->lineno = yylineno;    
     return expr;
@@ -249,6 +295,7 @@ void ExprPrint(Expr expr) {
                                printf("left  : \n"); ExprPrint(expr->left); 
                 printPadding();printf("op    : X \n"); 
                 printPadding();printf("right : \n"); ExprPrint(expr->right);break ; 
+            case VAR_CALL   : printf("Variable : %s\n",expr->value.s);    
             default : printf("Format d'affichage non reconnu \n "); break;     
         }
          decPaddingNb();
@@ -258,16 +305,19 @@ void ExprPrint(Expr expr) {
 
 
 void ExprPrintResult(Expr expr) {
-
+    printPadding();  
     switch(expr->op){
-        case ADD        :
-        case SUB        :
-        case MUL        :
-        case CONST_INT  : printf("Integer = %d\n", expr->value.i);break;
-        case CONST_VOID : printf("Void = void\n"); break;
-        case CONST_STR  : printf("String = %s\n", expr->value.s);break;
-        case CONCAT     : printf("String = %s\n", expr->value.s);break;
-        default : printf("Affichage Non encore implementé \n "); break;     
+        case ADD            :
+        case SUB            :
+        case MUL            :
+        case DIV            : break;
+        case VAR_CALL       : printf("Var %s  \n", expr->value.s );
+        case INSTANCE       : printf("Instance of class %s\n", expr->value.instance->name);break;
+        case CONST_INT      : printf("Integer = %d\n", expr->value.i);                           break;
+        case CONST_VOID     : printf("Void = void\n");                                           break;
+        case CONST_STR      : printf("String = %s\n", expr->value.s);                            break;
+        case CONCAT         : printf("String = %s\n", expr->value.s);                            break;
+        default : printf("Affichage Non encore implementé \n ");                                 break;     
     }
 }
 
@@ -314,17 +364,31 @@ Expr ExprVarEval(Expr expr) {
 
 
 Expr ExprEval(Expr expr) { 
-  
+    
+    if ( expr->isEvaluated ) 
+        return expr;
+     
+    Expr e ;   
     switch(expr->op) {
-        case CONST_INT  :  
-        case CONST_VOID :  
-        case CONST_STR  : return expr;
-        case ADD        : 
-        case SUB        :           
-        case DIV        :
-        case MUL        : return ExprArithmeticEval(expr); 
-        case CONCAT     : return ExprConcatEval(expr);    
-        case VAR_CALL   : return ExprVarEval(expr);     
+        case CONST_INT      :  
+        case CONST_VOID     : 
+        case CONST_STR      :  
+        case INSTANCE       : return expr;
+        case ADD            : 
+        case SUB            :           
+        case DIV            :
+        case MUL            : 
+            e = ExprArithmeticEval(expr); 
+            e->isEvaluated = TRUE;
+            return e ; 
+        case CONCAT     : 
+             e = ExprConcatEval(expr);    
+             e->isEvaluated = TRUE;
+             return e ;
+        case VAR_CALL   : 
+             e = ExprVarEval(expr);
+             e->isEvaluated = TRUE;
+             return e ;
         default : printf("Evaluation Non encore implementée \n "); break;     
     }
     return expr;     

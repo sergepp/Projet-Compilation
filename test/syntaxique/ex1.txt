@@ -2,35 +2,49 @@
 
 
 
-class Point(xc: Integer, yc: Integer, po:String) { 
+class Point(xc: Integer, yc: Integer) { 
     xc := xc ;
-    yc := xc; 
-    cpt := cpt + 1;
-    rt := 8;
-    rt := 0;
-    rt1 := 0;
-    rt2:= 0;
+    yc  := "sere"; 
+    this.cpt := cpt + 1;
 } is { 
-    var static cpt: Integer := 9;
-    var rt: Integer := 0;
-    var rt1: Integer := 0;
-    var rt2: Integer := 0;
+    
+    var static cpt: Integer := 0;
+    var xc: Integer := 0;
+    var yc: Integer := this.xc ;
+    
+    /*
+    def static mul(q:Integer) returns Integer {
+        yield x*2
+    }
+    
+    def mulInstance(q:Integer) returns Integer {
+        yield x*2
+    }
+    
+    def mulInstance(q:Integer) returns Integer {
+        yield x*4
+    }
+    
+    def testLouche(q:Integer) returns String {
+        yield 1.toString()
+    }
+    
+    def testLouche(q:Integer) returns String {
+        yield (1).toString()
+    }
+    */
+    
 }
-class PointColore(){} is {}
+class PointColoret(xc: Integer, yc: Integer){xc := xc;} is {}
 class Forme(){} is {}
-class Polygone(){} is {}
-class Rectangle(xc: Integer, yc: Integer) extends Cercle(zc) {} is {}
-
-
+class Polygone(xc:String){} is {}
+class Rectangle(xc: Integer, yc: Integer) extends Polygone(9+0) {} is {}
 
 {
-     var x : Integer := 2;
-     var z : Integer := 2*z + 1; 
-     var e : String := "Hola, Hola we dem boyz";
-     var w : Integer := 0;
-      
+     var rt : Point := new Point(7,20);
+     
      is
      
-     x + z + 1;           
+     rt ;           
 }
 

@@ -36,6 +36,9 @@ typedef int bool;
 #define INSTR_BLOC 19
 #define VAR_DECL 20
 #define VAR_CALL 21
+#define INSTR 22
+#define INSTANCE 23
+#define FIELD_ACCESS 24
 
 /* Codes d'erreurs */
 #define SUCCESS     0
@@ -66,7 +69,7 @@ typedef union
   Method    Method;
   Program   Program;
   Instr     Instr;
-  ClassCall ClassCall;
+  MethodCall MethodCall;
 } YYSTYPE;
 
 /* Variables et constantes globales */

@@ -68,6 +68,7 @@ int main(int argc, char **argv) {
     exit(USAGE_ERROR);
   }                 
   /* Initialisations */
+  CurrentMethodName = (char*) malloc(128 * sizeof(char));
   initializeScope();
   
   /* redirige l'entree standard sur le fichier.   .. */

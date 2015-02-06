@@ -1,13 +1,66 @@
 
+Scope ScopeNew(char* name, Scope prev, Scope next, Var var) {
+    Scope scope = NEW(1, _Scope); 
+    scope->name = name;
+    scope->prev = prev;
+    scope->next = next;
+    scope->var = var;
+    return scope;
+}
+
+void ScopeInitForClass(Class class){
+    /* On initialise le scope de toutes ses methodes */
+    Method m = class->methods;
+    
+   
+    while ( m != NULL ) {
+        char paramScopeName[128];
+        sprintf(paramScopeName, "%s.params", class->name);
+        Scope paramScope = ScopeNew(paramScopeName, NULL, NULL, m->params);  
+        
+    
+        char fieldScopeName[128];
+        sprintf(fieldScopeName, "%s.fields", class->name);
+        Scope fieldScope = ScopeNew(fieldScopeName, paramScope, NULL, class->fields);  
+        paramScope->next = fieldScope;
+        
+        m->scope = paramScope;
+        m = m->next;  
+    }
+}
+
+void ScopeInitForMethod(Class class, Method method){
+
+
+}
+void ScopeInitForConstructor(Class class){
+
+
+}
+Var FindVarInScope(char* varname, Scope scope) {
+    if ( scope == NULL ) 
+        return NULL;
+        
+    Var i = scope->var;
+    while ( i != NULL ){
+        if ( strcmp(i->name, varname) == 0 ) {
+           return i ;  
+        }
+        i = i->next;
+    }
+    i = FindVarInScope(varname, scope->next);
+    return i ; 
+}
+
 void ScopePrint(Scope scope){
     if ( scope == NULL ) 
         return;
-    
-    Var i = scope->declaredVars;  
+        
+    Var i = scope->var;
     printPadding();printf("%s  ->    ", scope->name);
-    while (i != NULL ) {
+    while ( i != NULL ){
         printf("%s,  ", i->name);
-        i = i->next;  
+        i = i->next;
     }
     printf("\n");
     incPaddingNb();
@@ -16,16 +69,17 @@ void ScopePrint(Scope scope){
 }
 
 void RemoveNextScope() {
+/*
     if ( currentScope->next != NULL ) {
        printf("Attention ! le Next du scope %s  doit exister pour pouvoir être supprimé dans cette methode RemoveNextScope\n", currentScope->name);
        return ;
     } 
-    free(currentScope->next->declaredVars) ; /* Faire une bouce pour supprimer la liste chainée */
+    free(currentScope->next->declaredVars) ; /* Faire une bouce pour supprimer la liste chainée 
     free(currentScope->next->name) ;
     free(currentScope->next->next) ;
     free(currentScope->next);
     
-    currentScope->next = NULL;
+    currentScope->next = NULL;*/
 }
 
 
@@ -58,14 +112,54 @@ bool IsVarInClassConsScope(char* varName, Class class){
 void ClassConsBodyAssertScopeAreCorrrect(Expr expr, Class class){
     char message[128];
 
+     Var v, i;
+     Expr e, s; 
+     Class c;
+     bool declared = FALSE;
      switch(expr->op) {
-        case VAR_CALL   : 
-        if ( IsVarInClassConsScope(expr->value.s, class) == FALSE ){
-             sprintf(message, "La variable  %s n'a pas ete declaree avant son utilisation", expr->value.s);
-             PrintError(message, expr->lineno);
-             exit(1);
-        }
-        break;
+        case SELECTION  : 
+
+            s = expr;
+            e = expr->left; 
+            
+
+           do { 
+            
+                if ( e->op == VAR_CALL && strcmp(e->value.s, "this") == 0  ){ 
+                        c = class;
+                }
+                
+                else {
+                        c = e->type;
+                }             
+                v = ClassGetFieldByName(c, s->value.s);
+                if ( v  == NULL ){
+                       sprintf(message, "Le champ %s n'a pas ete declare dans la classe %s\n", s->value.s, c->name);
+                       PrintError(message, e->lineno);
+                       exit(1);
+                }
+                if ( e != NULL ) {
+                    s = s->left;
+                    e = e->left;
+                }
+            }  while ( e != NULL );
+            break;
+        case VAR_CALL   :
+            i = class->consParams;
+            while ( i != NULL ) {   
+                if ( strcmp(expr->value.s, i->name) == 0 ) {
+                    declared = TRUE;
+                    break; 
+                } 
+                i = i->next;
+            }
+            if ( declared == FALSE ) {
+                sprintf(message, "La variable  %s n'a pas ete declaree avant son utilisation\n",  expr->value.s);
+                PrintError(message, expr->lineno);
+                exit(1);
+            }
+
+            break;
         case CONST_STR : 
         case CONST_INT : break;
         case ADD    :
@@ -96,11 +190,12 @@ void ClassAssertScopeAreCorrect(Class class){
         while ( j != NULL ) {
             if ( strcmp(i->name, j->name) == 0 ) { 
                 sprintf(message, "Le nom de variable  %s a deja été utilise dans les parametres", j->name);
-                PrintError(message, yylineno);
+                PrintError(message, j->lineno);
                 exit(1);
             }
             j = j->next;
         }
+        
         i = i->next;            
     }
     /* Verifie le scope du corps du constructeur */
@@ -140,7 +235,7 @@ void ClassAssertScopeAreCorrect(Class class){
 
 void initializeScope(){
     defaultClassDefsPlus(NULL); 
-    MainScope = CreateNewScope(NULL);
+    MainScope = ScopeNew("Main", NULL, NULL, NULL) ;
     currentScope = MainScope;
 }
 
@@ -158,37 +253,16 @@ void ClassRegisterInScope(Class cl){
 }
    
 
-
-Scope CreateNewScope(char* name) {
-    static int indexScope = 0;
-    char* scopeName;
-    Scope scope = NEW(1, _Scope);
-    if ( name == NULL ) {
-        indexScope++;
-        scopeName = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)) ;
-        sprintf(scopeName, "ScopeAnonyme__%d", indexScope);
-    } else {
-        scopeName = name;
-    }
-   
-    scope->declaredVars = NULL ; 
-    scope->name = scopeName ;
-    scope->prev = NULL;
-    scope->next = NULL;
-    
-    return scope;
-}
-
 void VarAddToScope(Scope scope, Var var){
     if ( scope == NULL ) {
         printf("Attention ! le scope ne doit pas etre null dans cette methode VarAddToScope\n");
         return ;
     } 
-    if ( scope->declaredVars == NULL ) {
-        scope->declaredVars = var;
+    if ( scope->var == NULL ) {
+        scope->var = var;
     }
     else {     
-        Var i = scope->declaredVars;
+        Var i = scope->var;
         while ( i->next != NULL ) { 
             i = i->next;
         }
@@ -198,8 +272,6 @@ void VarAddToScope(Scope scope, Var var){
 }
 
 void VarAddToCurrentScope(Var var){
-    if ( currentScope == NULL ) 
-        currentScope = CreateNewScope(NULL);
     VarAddToScope(currentScope, var); 
 }
 
@@ -235,12 +307,13 @@ void VarSetCurrentScopeToPrev(){
     currentScope = currentScope->prev;
 }
 void CreateNextCurrentScope(char* name) {
-    
+    /*
     if ( currentScope->next != NULL ) {
        printf("Attention ! le Next du scope %s ne doit etre null dans cette methode CreateNextCurrentScope\n", currentScope->name);
        return ;
     } 
     currentScope->next = CreateNewScope(name);
+    */
 }
 
 bool IsVarInClassScope(char* varName, Class class){

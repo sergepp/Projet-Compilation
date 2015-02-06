@@ -20,19 +20,31 @@ void VarPrint(Var v){
 }
 
 Var GetVarByName(char* varName, Scope scope){
-    Scope cs = currentScope;
+
+    if ( CurrentClass != NULL ) {
+        Method m = CurrentClass->methods;
+        while ( m != NULL ) {
+            
+            if ( strcmp(m->name, CurrentMethodName) == 0 ) {
+                Var v = FindVarInScope(varName, scope);
+                return v;
+            }
+            
+            m = m->next;   
+        }    
+    }
+    Scope cs = scope;
     if ( scope == NULL ) 
         cs = currentScope;
-   int t = 0;
-    Var i = cs->declaredVars;
-    while ( i != NULL ) {
-    
-        t++;
-        if ( t == 8 ) 
-            break;
-        if ( strcmp(i->name, varName) == 0 )
-            return i;
-        i = i->next;     
+    while ( cs != NULL ) {
+        Var i = cs->var;
+        while ( i != NULL ){
+
+            if ( strcmp(i->name, varName) == 0 )
+                return i;
+            i = i->next;
+        }
+        cs = cs->next;     
     }
     return NULL  ;  
 }
@@ -77,6 +89,7 @@ void AssertVarDeclIsOk(char* varName, char* classname, Expr e) {
 Var VarDecl(char* name, char* className, Expr e) {
     Var v    = NEW(1, _Var);
     v->name  = name;
+    v->lineno = yylineno;
     v->class = GetClassByName(className);
     v->value = e;
     v->isStatic = FALSE;
