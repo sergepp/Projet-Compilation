@@ -18,14 +18,22 @@ Class ClassDeclComplete(MethodCall extendsCall,
                 Method    methodDecl){
        Class class = CurrentClass; 
        class->extends    = extendsCall;         
-       class->fields->next = fieldDecl;   
 
-       class->methods->bodyInstr = constructorBody; 
+       class->scope = ScopeNew(class->name, NULL, NULL,  class->fields);
+       class->scope->method = methodDecl ;
+             
+       if ( extendsCall != NULL ) {
+            class->fields->next = NewSuper(class->extends->class, NULL);
+            class->fields->next->next = fieldDecl; 
+            class->scope->next =   class->extends->class->scope;
+       } else {
+            class->fields->next = fieldDecl ; 
+       }
+
+       class->methods->bodyInstr = constructorBody;        
        class->methods->next = methodDecl;        
-       
-       ScopeInitForClass(class);
+       ScopeInitForClass(class); 
        ClassDefPrint(class);
-        
        return class;         
 }
 
@@ -34,6 +42,19 @@ Var NewThis(Class class, Expr e){
     char* varname;
     varname = (char*) malloc(12 * sizeof(char));
     sprintf(varname, "this");
+    v->name = varname;
+    v->class = class;
+    v->value  = e;
+    v->lineno = yylineno;
+    
+    return v;
+}
+
+Var NewSuper(Class class, Expr e){ 
+    Var v = NEW(1, _Var);
+    char* varname;
+    varname = (char*) malloc(12 * sizeof(char));
+    sprintf(varname, "super");
     v->name = varname;
     v->class = class;
     v->value  = e;
@@ -103,8 +124,7 @@ Method MethodDecl(char* name, Var paramDecl, char* returnClassName, Instr bodyIn
         method->bodyExpr = bodyExpr;    
      }
     else { 
-        method->bodyInstr = bodyInstr;
-        printf(" Method %s         constBody op %d", name, bodyInstr->op);
+        method->bodyInstr = bodyInstr;  
     }
         
     return method; 
@@ -138,11 +158,13 @@ void ClassDefPrint(Class cl) {
 
 
 /* Cree les classes predefinies si elles ne sont pas deja définies 
- * par defaut et y ajoute la definition de la classe passée en paraletre 
+ * par defaut et y ajoute la definition de la classe passée en parametre 
  */
 Class defaultClassDefsPlus(Class classDefs) {
    
+    printf("Begin initIntegerClass \n");
     Integer = initIntegerClass();
+    printf("Ended initIntegerClass \n");
     String  = initStringClass();
     Void    = initVoidClass();
     
@@ -223,6 +245,7 @@ MethodCall ExtendsDecl(char* className, Expr expr, char* methodName){
     MethodCall extendsCall =  NEW(1, _MethodCall);
     extendsCall->class = GetClassByName(className);
     extendsCall->args = expr;
+    
     extendsCall->methodName = methodName;     
     return extendsCall;
 }
@@ -495,7 +518,6 @@ Expr ClassNewInstanceOf(char* className, Expr args) {
     expr->isEvaluated = TRUE;
     
     expr->value.instance = instance;
-    
     return expr;
 }
 
@@ -524,15 +546,13 @@ void  ReplaceVarInExpr(Expr e, char* varName, Var v){
         case SUB            :           
         case DIV            :
         case MUL            :
-        case CONCAT     :  
-            ReplaceVarInExpr(e->left, varName, v);
+        case CONCAT         :  
+            ReplaceVarInExpr(e->left,  varName, v);
             ReplaceVarInExpr(e->right, varName, v); 
             return ;
         case SELECTION      : 
             ReplaceVarInExpr(e->left, varName, v);
-             
-            ExprAssertFieldAccessIsOk(e->left, e->value.s);
-            
+            ExprAssertFieldAccessIsOk(e->left, e->value.s);      
             return ;
         case VAR_CALL   :
              while ( t != NULL ) {
@@ -562,6 +582,7 @@ void ClassTypeAndRedirect(Class class){
      /* Typer et rediriger les arguments de Extends : extends->args*/
      Expr e;
      Var v;
+      
      if ( class->extends != NULL ) {
          Method method = GetMethod(class->extends->class, class->extends->methodName);
          if ( method == NULL ) {
@@ -617,26 +638,41 @@ void ClassTypeAndRedirect(Class class){
          e = fields->value;
          if ( e != NULL ) {     
             ReplaceExprViaScope(e, sc);
-            /* ExprAssertInheritsType(fields->class, fields->value); */
+            ExprAssertInheritsType(fields->class, fields->value);
          }     
          fields = fields->next;
      } 
      
      /* Typer et rediriger le corps des methodes */
-     
-     method = class->methods;
+     if (  strcmp(class->name, "Integer") == 0
+        || strcmp(class->name, "String")  == 0
+        || strcmp(class->name, "Void")    == 0 )  {
+        printf(" A ne pas oublier !!\n");
+        return ;
+    }
+     method = class->methods->next;
      while ( method != NULL ) {
           if ( method->bodyExpr == NULL ) {
                 ReplaceVarInInstr(method->bodyInstr, method->scope);
-
+                if ( strcmp(method->returnClassName, method->bodyInstr->yield->type->name) != 0  ) {
+                    sprintf(message, "Le type de retour declaree n'est pas compatible avec le bloc (%s) := (%s)", method->returnClassName, method->bodyInstr->yield->type->name);
+                    PrintError(message, method->lineno);
+                    exit(1);
+               }
            } else {
+               
                ReplaceExprViaScope(method->bodyExpr, method->scope);
-
+                 if ( strcmp(method->returnClassName, method->bodyExpr->type->name) != 0  ) {
+                    sprintf(message, "Le type de retour declaree n'est pas compatible avec le bloc (%s) := (%s)", method->returnClassName, method->bodyExpr->type->name);
+                    PrintError(message, method->lineno);
+                    exit(1);
+               }
            }
+           
            method = method->next;
      }
      
-     
+     /*
      if (  strcmp(class->name, "Integer") == 0
         || strcmp(class->name, "String")  == 0
         || strcmp(class->name, "Void")    == 0 )  {
@@ -658,6 +694,7 @@ void ClassTypeAndRedirect(Class class){
         }
         m = m->next;
     }
+    */
 }
 
 
@@ -665,15 +702,13 @@ void ReplaceVarInInstr(Instr instr, Scope sc){
     
     if ( instr == NULL ) 
         return ;
-    
-    printf("Dans la fonction ReplaceVarInInstr   instr op : %d\n", instr->op);
+   
     Instr i = instr;
     Scope s;
     switch(instr->op) { 
-        case RETURN     :  printf("Return   ------>   \n");
+        case RETURN     :  
         case EXPR       :          
             ReplaceExprViaScope(instr->expr, sc);
-            printf("Return   ------>    %s\n", instr->expr->type->name);
             break;
         case ASSIGN     : 
             ReplaceExprViaScope(instr->leftExpr, sc);
@@ -692,14 +727,13 @@ void ReplaceVarInInstr(Instr instr, Scope sc){
                 s = sc; 
             else 
                 s = ScopeNew("Scope Anonyme\0", NULL, sc, i->var);
-             printf("\t\t   Instr\n");
+
             while ( i != NULL ) {
                 ReplaceVarInInstr(i, s); 
                 i = i->next ; 
             } 
-            instr->yield = InstrGetReturnExpr(instr->listInstr);
+            instr->yield = InstrGetReturnExpr(instr);
             
-            printf("\t\t   Instr Type %s\n\n\n", instr->yield->type->name);
             break;
         case IF         : 
             ReplaceExprViaScope(instr->cond, sc);            
@@ -721,6 +755,7 @@ void ReplaceExprViaScope(Expr expr, Scope scope){
     char message[128];
     Scope sc ; 
     Var v;
+    Method m;
     switch(expr->op) {
         case CONST_INT      :  
         case CONST_VOID     : 
@@ -748,6 +783,36 @@ void ReplaceExprViaScope(Expr expr, Scope scope){
              }
              expr->type = v->class;
              return ;
+        case INSTANCE_METHOD_CALL : 
+             printf("Method %s.%s \n", expr->left->type->name, expr->value.m->methodName); 
+             ReplaceExprViaScope(expr->left, scope);
+             m = FindMethodInScope(expr->left->type->name,  scope);
+             if ( m == NULL ) {        
+                sprintf(message, "Method %s inconnue dans la classe %s\n",  expr->value.m->methodName,  expr->left->type->name);
+                PrintError(message, expr->lineno);
+                exit(1);
+             }
+             expr->value.m->class = m->class;
+             expr->type = m->class;
+             
+            /*
+                        
+            Expr ExprFromMethodAccess(Expr e1, char* name, Expr args){
+                Expr expr = NEW(1, _Expr);
+                MethodCall methodCall = NEW(1, _MethodCall);
+                methodCall->methodName = name;
+                methodCall->args = args;
+                expr->left = e1;
+                expr->value.m = methodCall;
+                expr->op =  INSTANCE_METHOD_CALL;
+                expr->isEvaluated = FALSE;
+                expr->lineno = yylineno;
+             
+                return expr;
+            }
+            
+            */
+             return;
         default : printf("ReplaceExprViaScope Non encore implementée op %d \n ", expr->op); break;     
     } 
 }

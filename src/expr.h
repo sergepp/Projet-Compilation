@@ -12,9 +12,9 @@ void ExprAssertStaticMethodAccessIsOk(char* classname, char* name, Expr e5);
 void ExprAssertIDIsOk(char* name) ;
 
 
-Expr ExprFromStaticMethodAccess(char* classname, char* name);
+Expr ExprFromStaticMethodAccess(char* classname, char* name, Expr args);
 
-Expr ExprFromMethodAccess(Expr e1,char* name, Expr e5);
+Expr ExprFromMethodAccess(Expr e1,char* name, Expr args);
 
 void ExprAssertMethodAccessIsOk(Expr e1,char* name, Expr e5);
 

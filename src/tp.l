@@ -47,7 +47,7 @@ int keywordOrClasstypeOrId() {
   if (strcmp("if"       , yytext) == 0 )    return(IF) ;
   if (strcmp("then"     , yytext) == 0 )    return(THEN) ;
   if (strcmp("else"     , yytext) == 0 )    return(ELSE) ;
-  if (strcmp("void"     , yytext) == 0 )    return(CONST_VOID);
+  if (strcmp("void"     , yytext) == 0 )    return(CONST_VOID); 
   
   yylval.S = strdup(yytext); 
   

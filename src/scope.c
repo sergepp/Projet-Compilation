@@ -14,16 +14,14 @@ void ScopeInitForClass(Class class){
     
    
     while ( m != NULL ) {
+        /* Parametres de methodes */
         char paramScopeName[128];
         sprintf(paramScopeName, "%s.params", class->name);
         Scope paramScope = ScopeNew(paramScopeName, NULL, NULL, m->params);  
         
-    
-        char fieldScopeName[128];
-        sprintf(fieldScopeName, "%s.fields", class->name);
-        Scope fieldScope = ScopeNew(fieldScopeName, paramScope, NULL, class->fields);  
-        paramScope->next = fieldScope;
-        
+        /* Champ de la classe */
+        paramScope->next = class->scope;
+         
         m->scope = paramScope;
         m = m->next;  
     }
@@ -37,6 +35,29 @@ void ScopeInitForConstructor(Class class){
 
 
 }
+
+
+
+
+Method FindMethodInScope( char* methodname, Scope scope) {
+
+
+    if ( scope == NULL ) 
+        return NULL;
+        
+    Method m = scope->method;
+    while ( m != NULL ){ 
+    
+        if ( m != NULL &&  strcmp(m->name, methodname) == 0 ) {
+           return m ;  
+        }
+        m = m->next;
+    }
+    m = FindMethodInScope(methodname, scope->next);
+    return m ; 
+
+}
+
 Var FindVarInScope(char* varname, Scope scope) {
 
     if ( scope == NULL ) 
@@ -59,10 +80,18 @@ void ScopePrint(Scope scope){
         return;
         
     Var i = scope->var;
-    printPadding();printf("%s  ->    ", scope->name);
+    printPadding();printf("%s  VAR ->    ", scope->name);
     while ( i != NULL ){
-        printf("%s,  ", i->name);
+        printf("%s:%s,  ", i->name, i->class->name);
         i = i->next;
+    }
+    printf("\n");
+    
+    Method m = scope->method;
+    printPadding();printf("%s  METHODS ->    ", scope->name);
+    while ( m != NULL ){
+        printf("%s returns %s,  ", m->name, m->returnClassName);
+        m = m->next;
     }
     printf("\n");
     incPaddingNb();
@@ -237,6 +266,7 @@ void ClassAssertScopeAreCorrect(Class class){
 
 void initializeScope(){
     defaultClassDefsPlus(NULL); 
+    printf("initializeScope\n\n");
     MainScope = ScopeNew("Main", NULL, NULL, NULL) ;
     currentScope = MainScope;
 }

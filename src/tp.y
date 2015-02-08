@@ -73,6 +73,7 @@ extern Scope currentScope;
 extern Class AllDefinedClasses; 
 
 extern int yylex();	/* fournie par Flex */
+
 extern void yyerror();  /* definie dans tp.c */
 %}
 
@@ -138,7 +139,7 @@ constructorBody : instructionBloc { $$ = $1; }
 
 /* Declaration du corps d'une classe */
 
-L_fieldDecl : fieldDecl      { $$ = $1;  VarAddToCurrentScope($$); }
+L_fieldDecl : fieldDecl      { $$ = $1;  }
     | L_fieldDecl fieldDecl  { $$ = ParamDeclSetNext($1, $2); }
 ;
 fieldDecl :  varDecl                                {  $$ = $1; }
@@ -164,7 +165,6 @@ L_methodParamDecl  : methodParamDecl                { $$ = $1;   }
 ;
 methodParamDecl :  ID ':' CLASS_TYPE                { AssertClassExists($3); $$ = ParamDecl($1, $3); }
 ;
-
 
 methodBody :  proceduralBloc                        { $$ = $1; }
     | functionalBloc                                { $$ = $1; }        
@@ -213,7 +213,7 @@ expr : ID           { /*ExprAssertIDIsOk($1);*/ $$ = ExprFromVar($1); } // Const
 ;
 selection :   expr '.' ID                    { ExprAssertFieldAccessIsOk($1,$3);            $$ = ExprFromFieldAccess($1, $3);      } 
     |   CLASS_TYPE '.' ID                    { AssertClassExists($1);  ExprAssertStaticFieldAccessIsOk($1,$3);      $$ = ExprFromStaticFieldAccess($1, $3); }
-    |   CLASS_TYPE '.' ID '(' Opt_L_expr ')' { AssertClassExists($1); ExprAssertStaticMethodAccessIsOk($1,$3, $5); $$ = ExprFromStaticMethodAccess($1, $3);}
+    |   CLASS_TYPE '.' ID '(' Opt_L_expr ')' { AssertClassExists($1); ExprAssertStaticMethodAccessIsOk($1,$3, $5);  $$ = ExprFromStaticMethodAccess($1, $3, $5);}
     |         expr '.' ID '(' Opt_L_expr ')' { /* ExprAssertMethodAccessIsOk($1,$3, $5);    printf("\n method %s\n", $3); */  $$ = ExprFromMethodAccess($1, $3, $5);  }    
 ; 
 concatExpr : expr CONCAT expr   { $$ = ExprFromConcat($1, $3); }

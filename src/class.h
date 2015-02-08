@@ -76,6 +76,7 @@ void AssertClassLeftInheritsRight(Class left, Class right);
 
 void AssertClassInstanciationIsOk(Class class , Expr expr, int lineno);
 
+Var NewSuper(Class class, Expr e);
 
 Expr ClassNewInstanceOf(char* className, Expr expr);
 

@@ -65,13 +65,18 @@ void AssertVarAreNotDupliqued(Var var){
 
     if ( var == NULL || var->next == NULL ) 
         return; 
-
+    
+    if (  strcmp(var->class->name, "Integer")  == 0
+        || strcmp(var->class->name, "String")   == 0
+        || strcmp(var->class->name, "Void")     == 0 )  
+        return ; 
+        
     char message[128];
     Var i = var; 
     Var j; 
     while ( i != NULL ) {
         if ( i->class == NULL) {
-            sprintf(message, "Le type du parametre %s n'existe pas\n", i->name);
+            sprintf(message, "Le type du parametre       hgkhgh %s n'existe pas\n", i->name);
             PrintError(message, yylineno);
             exit(1);
         }
@@ -110,6 +115,13 @@ void AssertVarDeclIsOk(char* varName, char* classname, Expr e) {
 }
 
 Var VarDecl(char* name, char* className, Expr e) {
+
+    if (strcmp(name, "this") == 0 || strcmp(name, "super") == 0  ) {
+         char message[128];  
+         sprintf(message, "%s est un mot reserve et ne peut etre utiliser comme nom de variable ou de parametre\n", name);
+        PrintError(message, yylineno);
+        exit(1);
+    } 
     Var v    = NEW(1, _Var);
     v->name  = name;
     v->lineno = yylineno;

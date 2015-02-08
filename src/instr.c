@@ -30,8 +30,10 @@ void InstrAssertFnBlocIsOk(Var vars, Instr listInstr, Expr expr) {
 
 
 Expr InstrGetReturnExprOrElse(Instr instr, Expr expr) {
+
     if ( instr == NULL ) 
         return expr;
+
     
     if ( instr->op == RETURN ) 
         return instr->expr;

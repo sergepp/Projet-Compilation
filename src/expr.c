@@ -13,21 +13,27 @@ void ExprAssertFieldAccessIsOk(Expr e, char* name){
     }
 }
 
+Expr ExprFromStaticFieldAccess(char* classname, char* name){
 
-Expr ExprFromFieldAccess(Expr e, char* name){
-        
-    /*
-    printf("Dans la fonction ExprFromFieldAccess\n");
-  
-    Var field ;
-    field = ClassGetFieldByName(e->type, name);
-    */
+    Expr expr  = NEW(1, _Expr);
+    expr->op = STATIC_FIELD_ACCESS;
+    expr->lineno = yylineno;
+    expr->value.v = NEW(1, _Var);
+    expr->value.v->class = GetClassByName(classname);
+    expr->value.v->name = name;
+    
+    expr->isEvaluated = FALSE;
+    expr->lineno = yylineno;
+    
+    return expr;
+}
+
+Expr ExprFromFieldAccess(Expr e, char* name){  
+   
     Expr expr = NEW(1, _Expr);
     expr->left = e; 
     expr->op = SELECTION;
-    /*
-    expr->right = field->value;
-    expr->type = field->value->type;  */
+     
     expr->value.s = name;
     expr->isEvaluated = TRUE;
     expr->lineno = yylineno;
@@ -67,13 +73,6 @@ void ExprAssertStaticFieldAccessIsOk(char* classname, char* name){
     printf("ExprAssertStaticFieldAccessIsOk Not implemented\n");
 }
 
-Expr ExprFromStaticFieldAccess(char* classname, char* name){
-    printf("ExprFromStaticFieldAccess Not implemented\n");
-    Expr expr  = NEW(1, _Expr);
-    expr->op = SELECTION;
-    expr->lineno = yylineno;
-    return expr;
-}
 
 void ExprAssertStaticMethodAccessIsOk(char* classname, char* name, Expr e5) {
     printf("ExprAssertStaticMethodAccessIsOk Not implemented\n");
@@ -94,15 +93,25 @@ void ExprAssertIDIsOk(char* name) {
 }
 
 
-Expr ExprFromStaticMethodAccess(char* classname, char* name){
-    Expr e  = NEW(1, _Expr);
+Expr ExprFromStaticMethodAccess(char* classname, char* name, Expr args){
+    Expr e  = ExprFromMethodAccess(NULL, name, args);
+    e->op = STATIC_METHOD_CALL;
+    e->value.m->class = GetClassByName(classname);
     return e;
-    printf("ExprFromMethodAccess Not implemented\n");
 }
 
-Expr ExprFromMethodAccess(Expr e1,char* name, Expr e5){
-    return e1;
-    printf("ExprFromMethodAccess Not implemented\n");
+Expr ExprFromMethodAccess(Expr e1, char* name, Expr args){
+    Expr expr = NEW(1, _Expr);
+    MethodCall methodCall = NEW(1, _MethodCall);
+    methodCall->methodName = name;
+    methodCall->args = args;
+    expr->left = e1;
+    expr->value.m = methodCall;
+    expr->op =  INSTANCE_METHOD_CALL;
+    expr->isEvaluated = FALSE;
+    expr->lineno = yylineno;
+ 
+    return expr;
 }
 
 void ExprAssertMethodAccessIsOk(Expr e1,char* name, Expr e5){

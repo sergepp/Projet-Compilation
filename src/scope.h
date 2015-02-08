@@ -1,4 +1,7 @@
 
+
+Method FindMethodInScope( char* methodname, Scope scope);
+
 Scope ScopeNew(char* name, Scope prev, Scope next, Var var);
 
 Var  FindVarInScope(char* varName, Scope scope);

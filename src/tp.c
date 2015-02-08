@@ -70,7 +70,15 @@ int main(int argc, char **argv) {
                 
   /* Initialisations */
   CurrentMethodName = (char*) malloc(128 * sizeof(char));
+  AllDefinedClasses = Integer;
   initializeScope();
+  
+  printf("Avant le debut du programme\n");
+  Class c = AllDefinedClasses;
+  while ( c != NULL ) {
+        printf("\t%s", c->name);
+      c = c->next;
+  }
   
   /* redirige l'entree standard sur le fichier.   .. */
   close(0); dup(fi); close(fi);

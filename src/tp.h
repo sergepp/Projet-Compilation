@@ -37,8 +37,7 @@ typedef int bool;
 #define VAR_DECL 20
 #define VAR_CALL 21
 #define INSTR 22
-#define INSTANCE 23
-#define FIELD_ACCESS 24
+#define INSTANCE 23 
 
 /* Codes d'erreurs */
 #define SUCCESS     0
@@ -61,14 +60,14 @@ typedef union
 { 
   char C;
   char *S;
-  int I; 
+  int  I; 
   Expr Expr;
-  Class     Class;
-  Param     Param;
-  Var       Var;
-  Method    Method;
-  Program   Program;
-  Instr     Instr;
+  Class      Class;
+  Param      Param;
+  Var        Var;
+  Method     Method;
+  Program    Program;
+  Instr      Instr;
   MethodCall MethodCall;
 } YYSTYPE;
 

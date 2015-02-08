@@ -26,40 +26,132 @@ Var StringFields() {
     return fields ;
 }
 
+/*
 
-Method IntegerAddMethod() {
-    Method IntegerMethod = NEW(1, _Method); 
-    IntegerMethod->name  = (char*) malloc( ID_NAME_MAX_SIZE * sizeof(char) ) ; 
-    sprintf(IntegerMethod->name, "+");
-    IntegerMethod->bodyExpr = NULL; /* ExprFromArithmetic(IntegerMethod->this, ADD, IntegerMethod->params);
-    */
-    return IntegerMethod;
+
+Var VarDecl(char* name, char* className, Expr e) {
+
+    if (strcmp(name, "this") == 0 || strcmp(name, "super") == 0  ) {
+         char message[128];  
+         sprintf(message, "%s est un mot reserve et ne peut etre utiliser comme nom de variable ou de parametre\n", name);
+        PrintError(message, yylineno);
+        exit(1);
+    } 
+    Var v    = NEW(1, _Var);
+    v->name  = name;
+    v->lineno = yylineno;
+    v->class = GetClassByName(className);
+    v->value = e;
+    v->isStatic = FALSE;
+    return v;
 }
 
 
+
+Method MethodDecl(char* name, Var paramDecl, char* returnClassName, Instr bodyInstr, Expr bodyExpr){
+    Method method       = NEW(1, _Method);
+    method->name        = name; 
+    method->isOverride  = FALSE;
+    method->isStatic    = FALSE;
+    method->params      = paramDecl;
+    method->lineno      = yylineno;
+    AssertClassExists(returnClassName); 
+    AssertMethodAreNotDupliqued(method);
+    method->returnClassName = returnClassName;
+    
+    if ( bodyInstr == NULL )  {
+        method->bodyExpr = bodyExpr;    
+     }
+    else { 
+        method->bodyInstr = bodyInstr;  
+    }
+        
+    return method; 
+} 
+ 
+*/
+
+
+
+Method IntegerInitMethod(char* methodName, char* returnClassName, Var params) {
+    
+    Method method       = NEW(1, _Method);
+    method->name        = methodName;
+    method->isOverride  = FALSE;
+    method->isStatic    = FALSE;
+    method->params      = params;
+    method->lineno      = -1;   
+    method->returnClassName = returnClassName;
+    if ( strcmp("+", methodName) == 0  ) method->bodyExpr = ExprFromArithmetic(method->this, ADD, method->params->value);
+    if ( strcmp("-", methodName) == 0  ) method->bodyExpr = ExprFromArithmetic(method->this, SUB, method->params->value);
+    if ( strcmp("/", methodName) == 0  ) method->bodyExpr = ExprFromArithmetic(method->this, DIV, method->params->value);
+    if ( strcmp("*", methodName) == 0  ) method->bodyExpr = ExprFromArithmetic(method->this, MUL, method->params->value);
+    
+    return method;
+}
+
+Method IntegerPrintMethod(){
+
+    Method method       = NEW(1, _Method);
+    method->name        = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->name, "print"); 
+    method->isOverride  = FALSE;
+    method->isStatic    = FALSE;
+    method->params      = NULL;
+    method->lineno      = -1;   
+    method->returnClassName = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->name, "Void");  
+    return method;  
+}
+Method IntegerPrintlnMethod(){
+    Method method       = NEW(1, _Method);
+    method->name        = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->name, "println"); 
+    method->isOverride  = FALSE;
+    method->isStatic    = FALSE;
+    method->params      = NULL;
+    method->lineno      = -1;   
+    method->returnClassName = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->name, "Void");    
+    return method;
+}
+Method IntegerToStringMethod(){
+    Method method       = NEW(1, _Method);
+    method->name        = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->name, "toString"); 
+    method->isOverride  = FALSE;
+    method->isStatic    = FALSE;
+    method->params      = NULL;
+    method->lineno      = -1;   
+    method->returnClassName = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->name, "String");   
+    return method; 
+}
+
 /* Renvoi la liste de toutes les methodes disponibles sur l'objet Integer */
 Method IntegerMethods() {
+    Var param = VarDecl("arg0", "Integer", NULL);
     Method 
-    IntegerMethods = IntegerAddMethod();    /*
-    IntegerMethods->next  = IntegerSubMethod();
-    IntegerMethods->next->next  = IntegerDivMethod();
-    IntegerMethods->next->next->next  = IntegerModMethod();
-    IntegerMethods->next->next->next->next  = IntegerModMethod(); */
-    
+    IntegerMethods = IntegerInitMethod("+", "Integer", param); 
+    IntegerMethods->next  =  IntegerInitMethod("-", "Integer", param);
+    IntegerMethods->next->next  = IntegerInitMethod("/", "Integer", param);
+    IntegerMethods->next->next->next  = IntegerInitMethod("*", "Integer", param);
+    IntegerMethods->next->next->next->next  = IntegerPrintMethod();
+    IntegerMethods->next->next->next->next->next  = IntegerPrintlnMethod();
+    IntegerMethods->next->next->next->next->next->next  = IntegerToStringMethod();
     return IntegerMethods;
 }
 
 
+
+
 /* Renvoi la liste de toutes les methodes disponibles sur l'objet String */
 Method StringMethods() {
-    
-    return NULL;
+    Method 
+    StringMethods = NULL ;/* StringPrintMethod();/*
+    StringMethods->next = StringPrintlnMethod(); */
+    return StringMethods;
 }
 
 
 Class initStringClass() {
    
-    String = NEW(1, _Class);
+    String = NEW(1, _Class); 
+    
     String->name      = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(String->name, "String");
     String->fields    = StringFields();
     String->methods   = StringMethods();
@@ -72,7 +164,7 @@ Class initStringClass() {
 
 Class initVoidClass() {
    
-    Void = NEW(1, _Class);
+    Void = NEW(1, _Class); 
     Void->name      = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(Void->name, "Void");
     voidInstance = ExprFromVoid();
     voidInstance->lineno = -1; 
@@ -138,7 +230,8 @@ void ProgramEval(Program program){
 void ProgramTypeAndRedirect(Program program){
     Class cl = AllDefinedClasses; 
     while ( cl != NULL ) {
-        ClassTypeAndRedirect(cl);
+        /* ClassTypeAndRedirect(cl); */       
+        printf("\t%s\n", cl->name);
         cl = cl->next;
     }
     /* InstrTypeAndRedirect(program->instrs); */

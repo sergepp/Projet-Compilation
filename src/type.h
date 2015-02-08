@@ -7,6 +7,8 @@ typedef int bool;
 
 struct __Class;
 struct __Expr;
+struct __Method;
+struct __MethodCall;
 
 typedef struct __Var {
   char* name;
@@ -20,6 +22,7 @@ typedef struct __Var {
 
 typedef struct __Scope {
     Var var;
+    struct __Method* method;
     char* name;
     struct __Scope* prev; 
     struct __Scope* next; 
@@ -42,12 +45,14 @@ typedef struct __Expr {
   Scope scope;
   int lineno;
   bool isEvaluated;
-  struct __Expr* left;
+  struct __Expr* left;                /* valeur si op = INSTANCE_METHOD_CALL   */
   int op;
   union {
-    char *s;                    /* valeur de la feuille si op = CONST_STR ou VAR_CALL ou SELECTION*/
-    int i;                      /* valeur de la feuille si op = CONST_INT */
-    struct __Class* instance;   /* Valeur de la feuille si op = INSTANCE*/
+    char *s;                          /* valeur de la feuille si op = CONST_STR ou VAR_CALL ou SELECTION */
+    int i;                            /* valeur de la feuille si op = CONST_INT */
+    struct __Class* instance;         /* Valeur de la feuille si op = INSTANCE*/
+    struct __MethodCall* m;           /* valeur de la feuille si op = INSTANCE_METHOD_CALL  STATIC_METHOD_CALL */
+    Var v;                            /* valeur de la feuille si op = STATIC_FIELD_ACCESS  */  
   } value; 
   struct __Expr* right; 
   struct __Expr* next ; 
@@ -65,6 +70,7 @@ typedef struct __Field {
 typedef struct __Instr {  
   int op;
     Scope scope;
+    
     Expr expr;                  /* valeur de la feuille si op = EXPR */
     Expr yield;                 /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC ou INSTR_BLOC */
     Var var;                    /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC  */
@@ -86,6 +92,7 @@ typedef struct __Method {
   bool  isOverride;
   bool  isStatic;
   Var   params;
+  Expr this;
   struct __Class* class;
   Scope scope;
   Expr  bodyExpr;
@@ -110,6 +117,7 @@ typedef struct __Class {
   char* name;
   ClassType type;
   Var fields;
+  Scope scope;
   Method methods;
   Var consParams;
   Instr consBody;
@@ -186,4 +194,7 @@ void ProgramEval(Program program);
 Program makeProgram(Class classDefs, Instr instrs);
 
 
+Method IntegerInitMethod(char* methodName, char* returnClassName, Var params);
+
+Method IntegerPrintMethod();
 
