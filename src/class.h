@@ -21,7 +21,22 @@ MethodCall ExtendsDecl(char* className, Expr expr,  char* methodName);
  
 Method GetMethod(Class class, char* methodName);
 
+
+void AssertClassIsNotDupliqued(char*  className);
+
+bool IsMethodOverrideSomething(Method method, Class class); 
+
+void AssertMethodAreNotDupliqued(Method method);
+
+void AssertClassExists(char* className); 
+
 void ReplaceVarInExpr(Expr e, char* varName, Var v) ; 
+
+bool MethodHasSameSignature( Method m1, Method m2);
+
+void ReplaceExprViaScope(Expr expr, Scope scope);
+
+void ReplaceVarInInstr(Instr instr, Scope sc);
 
 void ClassTypeAndRedirect(Class class);
 
@@ -59,7 +74,8 @@ Var NewThis(Class class, Expr e);
 
 void AssertClassLeftInheritsRight(Class left, Class right);
 
-void AssertClassInstanciationIsOk(char* class, Expr expr);
+void AssertClassInstanciationIsOk(Class class , Expr expr, int lineno);
+
 
 Expr ClassNewInstanceOf(char* className, Expr expr);
 

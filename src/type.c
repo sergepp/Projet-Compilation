@@ -74,7 +74,9 @@ Class initVoidClass() {
    
     Void = NEW(1, _Class);
     Void->name      = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(Void->name, "Void");
-     
+    voidInstance = ExprFromVoid();
+    voidInstance->lineno = -1; 
+    
     return Void;  
 }
 
@@ -134,7 +136,11 @@ void ProgramEval(Program program){
 }
 
 void ProgramTypeAndRedirect(Program program){
-    ClassTypeAndRedirect(program->classDefs->next->next->next->next->next->next->next);
+    Class cl = AllDefinedClasses; 
+    while ( cl != NULL ) {
+        ClassTypeAndRedirect(cl);
+        cl = cl->next;
+    }
     /* InstrTypeAndRedirect(program->instrs); */
 }
 

@@ -38,12 +38,14 @@ void ScopeInitForConstructor(Class class){
 
 }
 Var FindVarInScope(char* varname, Scope scope) {
+
     if ( scope == NULL ) 
         return NULL;
         
     Var i = scope->var;
-    while ( i != NULL ){
-        if ( strcmp(i->name, varname) == 0 ) {
+    while ( i != NULL ){ 
+    
+        if ( i != NULL &&  strcmp(i->name, varname) == 0 ) {
            return i ;  
         }
         i = i->next;
@@ -65,7 +67,7 @@ void ScopePrint(Scope scope){
     printf("\n");
     incPaddingNb();
     ScopePrint(scope->next);
-    decPaddingNb(); 
+    decPaddingNb();
 }
 
 void RemoveNextScope() {

@@ -10,12 +10,14 @@ Instr InstrFromProcBloc(Var vars,Instr listInstr){
     instr->op           = PROC_BLOC;
     instr->var          = vars;
     instr->listInstr    = listInstr;
+    instr->yield        = InstrGetReturnExpr(listInstr);
     return instr; 
 }
 
 Instr InstrFromInstrBloc(Instr listInstr){
 	Instr instr = NEW(1, _Instr);
     instr->op           = INSTR_BLOC;
+    instr->yield        = InstrGetReturnExpr(listInstr);
     instr->listInstr    = listInstr;
     return instr; 
 }
@@ -27,10 +29,37 @@ void InstrAssertFnBlocIsOk(Var vars, Instr listInstr, Expr expr) {
 }
 
 
+Expr InstrGetReturnExprOrElse(Instr instr, Expr expr) {
+    if ( instr == NULL ) 
+        return expr;
+    
+    if ( instr->op == RETURN ) 
+        return instr->expr;
+            
+    Instr i = instr->listInstr;
+    while ( i != NULL  ) {
+       if ( i->op == RETURN ) 
+            return i->expr;
+            
+       i = i->next; 
+    }    
+     
+    return expr; 
+}
+
+Expr InstrGetReturnExpr(Instr instr) {
+    Expr result =  InstrGetReturnExprOrElse(instr, voidInstance);
+    return result;
+}
+
+Expr InstrGetBlocReturnExprOrElse(Instr listInstr, Expr expr) {
+    
+}
+
 Instr InstrFromFnBloc(Var vars, Instr listInstr, Expr expr){
 	Instr instr = NEW(1, _Instr);
     instr->op           = FN_BLOC;
-    instr->yield        = expr;
+    instr->yield        = InstrGetReturnExprOrElse(listInstr, expr);
     instr->var          = vars;
     instr->listInstr    = listInstr;
     return instr; 
@@ -82,12 +111,7 @@ void InstrAssertAssignIsOk(Expr left, Expr right){
         PrintError(message, yylineno);
         exit(1);
     }
-    
-    /* L'affectation ne sont pas pretes a etre verifeees et la verification se 
-       fera apres une fois que l'arbre aura ete decore */
- 
-    if ( left->type == NULL );
-        return;
+     
         
     /* Si l'expression de gauche n'est pas une variable, 
        on a un probleme on peut pas modifier une constante */    
@@ -106,7 +130,7 @@ void InstrAssertAssignIsOk(Expr left, Expr right){
         left = right
         
         right doit bien heriter de left et non l inverse.    */
-    if ( ClassLeftInheritsRight(right->type, left->type) != FALSE ) {
+    if ( ClassLeftInheritsRight(right->type, left->type) == FALSE ) {
         sprintf(message, "Affectation impossible, au niveau des types, l'affectation se resoud a    (%s) :=  (%s) \n", left->type->name, right->type->name);
         PrintError(message, right->lineno);
         exit(1);
@@ -117,6 +141,7 @@ Instr InstrFromAssign(Expr e1,Expr e2){
 	Instr instr = NEW(1, _Instr);
     instr->op           = ASSIGN;
     instr->leftExpr     = e1;
+    instr->yield        = voidInstance;
     instr->rightExpr    = e2;
     return instr; 
 }
@@ -130,6 +155,7 @@ Instr InstrFromReturn(Expr expr){
     Instr instr = NEW(1, _Instr);
     instr->op           = RETURN;
     instr->expr         = expr;
+    instr->yield        = expr;
     return instr;
 }
 
@@ -139,6 +165,7 @@ Instr InstrFromIf(Expr cond, Instr thenInstr, Instr elseInstr){
     instr->cond         = cond;
     instr->thenInstr    = thenInstr;
     instr->elseInstr    = elseInstr;
+    instr->yield        = voidInstance;
     return instr; 
 }
 

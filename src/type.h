@@ -65,10 +65,9 @@ typedef struct __Field {
 typedef struct __Instr {  
   int op;
     Scope scope;
-    
     Expr expr;                  /* valeur de la feuille si op = EXPR */
-    Expr yield;                 /* valeur de la feuille si op = FN_BLOC */
-    Var var;                    /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC ou VAR_DECL */
+    Expr yield;                 /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC ou INSTR_BLOC */
+    Var var;                    /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC  */
     struct __Instr* listInstr;  /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC ou INSTR_BLOC */                   
     Expr leftExpr;              /* valeur de la feuille si op = ASSIGN  ou SELECTION*/
     Expr rightExpr;             /* valeur de la feuille si op = ASSIGN */    
@@ -83,6 +82,7 @@ typedef struct __Instr {
 typedef struct __Method {
   
   char* name;
+  int lineno;
   bool  isOverride;
   bool  isStatic;
   Var   params;
@@ -115,7 +115,7 @@ typedef struct __Class {
   Instr consBody;
   MethodCall extends;
   Expr extendsParams;
-    
+  int lineno;
   struct __Class* next ; 
 } _Class, *Class;
 
@@ -135,6 +135,8 @@ Class String;
 
 Class Void;
 
+Expr voidInstance;
+
 Class AllDefinedClasses;
 
 Scope MainScope;
@@ -143,7 +145,7 @@ Scope currentScope ;
 
 Class CurrentClass;
 
-Expr This; 
+Expr This ;
 
 char* CurrentMethodName;
 

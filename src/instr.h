@@ -1,6 +1,10 @@
 
 void AssertInstrAssignIsOk(Instr instr);
 
+Expr InstrGetReturnExpr(Instr listInstr);
+
+Expr InstrGetReturnExprOrElse(Instr listInstr, Expr expr);
+
 void InstrAssertProcBlocIsOk(Var var,Instr instr);
 
 Instr InstrFromProcBloc(Var vars,Instr listInstr);

@@ -8,12 +8,14 @@ class A() is {
 
 class A2() extends A() is {
   var v : String := "hello"; 	/* masque le champ v de la classe A */
-  def override f() returns Void { 
+  def override f(b:Integer) returns Void { 
       "A2::f()\n".println();
       super.f();
       v := "Hello";
    }
-  def override toString() returns String := super.toString() & v
+  def override toGreatString() returns String := super.toString() & v
+  def override toGreatString() returns String := super.toString() & v
+  
 }
 
 { var monA : A := new A();

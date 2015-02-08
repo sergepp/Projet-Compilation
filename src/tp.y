@@ -102,7 +102,10 @@ L_classDecl : classDecl           { $$ = $1;    CurrentClass = NULL; }
     | L_classDecl classDecl       { $$ = ClassDeclSetNext($1, $2); } 
 ;
 classDeclHeader  : CLASS CLASS_TYPE '(' Opt_L_classParamDecl ')'  { 
+    AssertVarAreNotDupliqued($4);
+    AssertClassIsNotDupliqued($2);
     CurrentClass = ClassDecl($2, $4);
+   
 }           
 ;
 classDecl : classDeclHeader Opt_extendsDecl Opt_constructorBody  IS '{' '}'                         { $$ = ClassDeclComplete($2, $3, NULL, NULL);   ClassDeclAssertIsOk($$);   }
@@ -115,10 +118,10 @@ classDecl : classDeclHeader Opt_extendsDecl Opt_constructorBody  IS '{' '}'     
 Opt_L_classParamDecl :      { $$ = NULL; }
     | L_classParamDecl      { $$ = $1;   }
 ;
-L_classParamDecl : classParamDecl           { $$ = $1;   }
+L_classParamDecl : classParamDecl           { $$ = $1;  }
     | L_classParamDecl ',' classParamDecl   { $$ = ParamDeclSetNext($1, $3);   }
 ;
-classParamDecl : ID ':' CLASS_TYPE          {  $$ = ParamDecl($1, $3); }
+classParamDecl : ID ':' CLASS_TYPE          {  AssertClassExists($3); $$ = ParamDecl($1, $3); }
 ;
 
 Opt_extendsDecl :   { $$ = NULL; }
@@ -126,7 +129,7 @@ Opt_extendsDecl :   { $$ = NULL; }
 ;
 extendsDecl : EXTENDS CLASS_TYPE '(' Opt_L_expr ')' { ExtendsDeclAssertIsOk($2, $4); $$ = ExtendsDecl($2, $4, "constructor"); }
 ;
-Opt_constructorBody : { $$ = NULL; }
+Opt_constructorBody : { $$ = InstrFromInstrBloc(NULL); }
     | constructorBody { $$ = $1;  }
 ;
 constructorBody : instructionBloc { $$ = $1; }
@@ -139,8 +142,8 @@ L_fieldDecl : fieldDecl      { $$ = $1;  VarAddToCurrentScope($$); }
     | L_fieldDecl fieldDecl  { $$ = ParamDeclSetNext($1, $2); }
 ;
 fieldDecl :  varDecl                                {  $$ = $1; }
-    | VAR STATIC ID ':' CLASS_TYPE ASSIGN expr ';'  {  $$ = StaticVarDecl($3, $5, $7);   }
-    | VAR STATIC ID ':' CLASS_TYPE ';'              {  $$ = StaticVarDecl($3, $5, NULL); }
+    | VAR STATIC ID ':' CLASS_TYPE ASSIGN expr ';'  {  AssertClassExists($5); $$ = StaticVarDecl($3, $5, $7);   }
+    | VAR STATIC ID ':' CLASS_TYPE ';'              {  AssertClassExists($5); $$ = StaticVarDecl($3, $5, NULL); }
 ;
 L_methodDecl : methodDecl      { $$ = $1; }
     | L_methodDecl methodDecl  { $$ = MethodDeclSetNext($1, $2); }
@@ -159,7 +162,7 @@ Opt_L_methodParamDecl  :                            { $$ = NULL; }
 L_methodParamDecl  : methodParamDecl                { $$ = $1;   }
     | L_methodParamDecl  ',' methodParamDecl        { $$ = ParamDeclSetNext($1, $3); }
 ;
-methodParamDecl :  ID ':' CLASS_TYPE                { $$ = ParamDecl($1, $3); }
+methodParamDecl :  ID ':' CLASS_TYPE                { AssertClassExists($3); $$ = ParamDecl($1, $3); }
 ;
 
 
@@ -168,10 +171,10 @@ methodBody :  proceduralBloc                        { $$ = $1; }
 ;
 
 // Declaration d'un bloc d'instruction
-instructionBloc : '{'  '}'                          { $$ = NULL; }
+instructionBloc : '{'  '}'                          { $$ = InstrFromInstrBloc(NULL); }
     |   '{' L_instr '}'                             { $$ = InstrFromInstrBloc($2);          }
 ;
-proceduralBloc :  '{'  '}'                          { $$ = NULL; }
+proceduralBloc :  '{'  '}'                          { $$ = InstrFromInstrBloc(NULL); }
     |   '{' L_instr '}'                             { $$ = InstrFromInstrBloc($2);          }
     |   '{' L_varDecl IS L_instr '}'                { $$ = InstrFromProcBloc($2, $4);       }
 ;    
@@ -185,11 +188,11 @@ L_instr : instr         { $$ = $1; }
     | L_instr instr     { $$ = InstrSetNext($1, $2); }
 ;
 
-instr :  expr ';'                       { $$ = InstrFromExpr($1); }
+instr :  expr ';'                       { $$ = InstrFromExpr($1);   }
     | RETURN expr ';'                   { $$ = InstrFromReturn($2); }
     | proceduralBloc                    { $$ = $1; }
     | functionalBloc                    { $$ = $1; }
-    | expr ASSIGN expr ';'              { InstrAssertAssignIsOk($1, $3);  $$ = InstrFromAssign($1, $3); }
+    | expr ASSIGN expr ';'              { $$ = InstrFromAssign($1, $3); }
     | IF expr THEN L_instr ELSE L_instr { InstrAssertIfIsOk($2, $4, $6);  $$ = InstrFromIf($2, $4, $6); }
 ;
 Opt_L_expr :            { $$ = NULL; }
@@ -209,9 +212,9 @@ expr : ID           { /*ExprAssertIDIsOk($1);*/ $$ = ExprFromVar($1); } // Const
     | '(' expr ')'  { $$ = $2; }      
 ;
 selection :   expr '.' ID                    { ExprAssertFieldAccessIsOk($1,$3);            $$ = ExprFromFieldAccess($1, $3);      } 
-    |   CLASS_TYPE '.' ID                    { ExprAssertStaticFieldAccessIsOk($1,$3);      $$ = ExprFromStaticFieldAccess($1, $3); }
-    |   CLASS_TYPE '.' ID '(' Opt_L_expr ')' { ExprAssertStaticMethodAccessIsOk($1,$3, $5); $$ = ExprFromStaticMethodAccess($1, $3);}
-    |         expr '.' ID '(' Opt_L_expr ')' { ExprAssertMethodAccessIsOk($1,$3, $5);    printf("\n method %s\n", $3);   $$ = ExprFromMethodAccess($1, $3, $5);  }    
+    |   CLASS_TYPE '.' ID                    { AssertClassExists($1);  ExprAssertStaticFieldAccessIsOk($1,$3);      $$ = ExprFromStaticFieldAccess($1, $3); }
+    |   CLASS_TYPE '.' ID '(' Opt_L_expr ')' { AssertClassExists($1); ExprAssertStaticMethodAccessIsOk($1,$3, $5); $$ = ExprFromStaticMethodAccess($1, $3);}
+    |         expr '.' ID '(' Opt_L_expr ')' { /* ExprAssertMethodAccessIsOk($1,$3, $5);    printf("\n method %s\n", $3); */  $$ = ExprFromMethodAccess($1, $3, $5);  }    
 ; 
 concatExpr : expr CONCAT expr   { $$ = ExprFromConcat($1, $3); }
 ;
@@ -220,7 +223,7 @@ constant : CONST_STR            { $$ = ExprFromString($1);  }
     |      CONST_VOID           { $$ = ExprFromVoid();      }
 ;
 
-instanciation : NEW CLASS_TYPE '(' Opt_L_expr ')'   {  $$ = ExprFromInstanciation($2, $4); }
+instanciation : NEW CLASS_TYPE '(' Opt_L_expr ')'   { AssertClassExists($2);  $$ = ExprFromInstanciation($2, $4); }
 ;
  
 
@@ -236,9 +239,9 @@ booleanExpr : expr RELOP expr   { $$ = ExprFromBoolean($1, yylval.I, $3); }
 ;
 
 L_varDecl : varDecl         { $$ = $1;  VarAddToCurrentScope($$); }
-    |  L_varDecl varDecl    { $$ =      ParamDeclSetNext ($1, $2); }
+    |  L_varDecl varDecl    { $$ =      ParamDeclSetNext($1, $2); }
 ;
-varDecl : VAR ID ':' CLASS_TYPE ASSIGN expr ';' { $$ = VarDecl($2, $4, $6);    }
-    |     VAR ID ':' CLASS_TYPE ';'             { $$ = VarDecl($2, $4, NULL);  }
+varDecl : VAR ID ':' CLASS_TYPE ASSIGN expr ';' { AssertClassExists($4);$$ = VarDecl($2, $4, $6);    }
+    |     VAR ID ':' CLASS_TYPE ';'             { AssertClassExists($4);$$ = VarDecl($2, $4, NULL);  }
 ;
 

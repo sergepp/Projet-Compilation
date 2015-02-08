@@ -70,6 +70,7 @@ void ExprAssertStaticFieldAccessIsOk(char* classname, char* name){
 Expr ExprFromStaticFieldAccess(char* classname, char* name){
     printf("ExprFromStaticFieldAccess Not implemented\n");
     Expr expr  = NEW(1, _Expr);
+    expr->op = SELECTION;
     expr->lineno = yylineno;
     return expr;
 }
@@ -134,8 +135,8 @@ Expr ExprFromInstanciation(char* className, Expr e){
 
 void ExprAssertInheritsType(Class ct, Expr e){
     char message[128];
-    printf("Dans la fonction  ExprAssertInheritsType\n");
-    if ( ClassLeftInheritsRight(e->type, ct) != FALSE ) {
+    
+    if ( ClassLeftInheritsRight(e->type, ct) == FALSE ) {
         sprintf(message, "Types incompatibles pour cette operation");
         PrintError(message, e->lineno);
         exit(1);
@@ -206,9 +207,7 @@ void ExprAssertSameClass(Expr e1, Expr e2){
 
 Expr ExprFromVoid(){
     Expr expr = NEW(1, _Expr);
-    expr->left = NULL; 
     expr->op = CONST_VOID;
-    expr->right = NULL;
     expr->type = Void; 
     expr->isEvaluated = TRUE;
     expr->lineno = yylineno;
@@ -217,7 +216,6 @@ Expr ExprFromVoid(){
 
 Expr ExprFromInt(int value) {
     Expr expr = NEW(1, _Expr);
-    expr->left = NULL; 
     expr->op = CONST_INT; 
     expr->value.i = value;
     expr->type = Integer; 

@@ -1,50 +1,39 @@
-
-
-
-
-class Point(xc: Integer, yc: Integer) { 
-    xc := xc ;
-    yc  := "sere"; 
-    this.cpt := cpt + 1;
-} is { 
-    
-    var static cpt: Integer := 0;
-    var xc: Integer := 0;
-    var yc: Integer := this.xc ;
-    
-    /*
-    def static mul(q:Integer) returns Integer {
-        yield x*2
-    }
-    
-    def mulInstance(q:Integer) returns Integer {
-        yield x*2
-    }
-    
-    def mulInstance(q:Integer) returns Integer {
-        yield x*4
-    }
-    
-    def testLouche(q:Integer) returns String {
-        yield 1.toString()
-    }
-    
-    def testLouche(q:Integer) returns String {
-        yield (1).toString()
-    }
-    */
-    
+class A(xc:Integer) is {
+  var v : Integer := "SEr";
+  def foo() returns Integer { "A::f()\n".println(); v := 2; return 6; }  
+  def f() returns Void { "A::f()\n".println(); v := 2; }
+  def g() returns Void { "A::g()\n".println(); v := 5; }
+  def toString() returns String := "Serge"
 }
-class PointColoret(xc: Integer, yc: Integer){xc := xc;} is {}
-class Forme(){} is {}
-class Polygone(xc:String){} is {}
-class Rectangle(xc: Integer, yc: Integer) extends Polygone(9+0) {} is {}
+
+class A1(xc:Integer) extends A(xc) is {
+    def  toGreatString() returns String := super.toString() & v
+}
+
+
+class A2(m:Integer) extends A1(m) is {
+  var v : String := "hello"; 	/* masque le champ v de la classe A */
+  def override f() returns Void { 
+      "A2::f()\n".println();
+      super.f();
+      v := "Hello";
+   }
+  def toStringRTE(xc: Integer) returns String := super.toString() & v
+  def  toGreatRTYString() returns String := super.toString() & v
+}
 
 {
-     var rt : Point := new Point(7,20);
-     
-     is
-     
-     rt ;           
+  var monA : A := new A();
+  var monA2 : A2 := new A2();
+  is
+  "Test des classes A et A2".println();
+  monA.f(); 
+  monA.toString().println();
+  monA.g();
+  monA.toString().println();
+  monA2.f();
+  monA2.toString().println();
+  monA2.g();
+  monA2.toString().println(); 
+  "\nDone !".println();
 }
-

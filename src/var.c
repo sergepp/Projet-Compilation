@@ -61,7 +61,33 @@ Var StaticVarDecl(char* name, char* classType, Expr expr){
     return v;
 }
 
+void AssertVarAreNotDupliqued(Var var){ 
 
+    if ( var == NULL || var->next == NULL ) 
+        return; 
+
+    char message[128];
+    Var i = var; 
+    Var j; 
+    while ( i != NULL ) {
+        if ( i->class == NULL) {
+            sprintf(message, "Le type du parametre %s n'existe pas\n", i->name);
+            PrintError(message, yylineno);
+            exit(1);
+        }
+        j = i->next;
+        while ( j != NULL ) {
+            if ( strcmp(i->name, j->name) == 0 ) { 
+                sprintf(message, "Le nom de variable  %s a deja été utilise dans les parametres", j->name);
+                PrintError(message, j->lineno);
+                exit(1);
+            }
+            j = j->next;
+        }
+        
+        i = i->next;            
+    }
+}
 
 void AssertAbstractVarDeclIsOk(char* name, char* classname) {
     AssertVarDeclIsOk(name, classname, NULL);
@@ -80,10 +106,7 @@ void AssertVarDeclIsOk(char* varName, char* classname, Expr e) {
         sprintf(message, "Variable %s deja definie dans le scope actuel", varName);
         PrintError(message, e->lineno);
         exit(1);
-     }
-    /* Le type de la classe doit etre compatible avec le type de l'expression */
-    
-    printf("AssertVarDeclIsOk not tottaly implemented\n");
+     } 
 }
 
 Var VarDecl(char* name, char* className, Expr e) {

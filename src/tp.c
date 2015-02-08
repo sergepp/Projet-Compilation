@@ -66,7 +66,8 @@ int main(int argc, char **argv) {
   if ((fi = open("../test/syntaxique/ex1.txt", O_RDONLY)) == -1) {
     fprintf(stderr, "Error: Cannot open %s\n", "../test/syntaxique/ex1.txt");
     exit(USAGE_ERROR);
-  }                 
+  }   
+                
   /* Initialisations */
   CurrentMethodName = (char*) malloc(128 * sizeof(char));
   initializeScope();
