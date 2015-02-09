@@ -17,7 +17,7 @@ Instr InstrFromProcBloc(Var vars,Instr listInstr){
 Instr InstrFromInstrBloc(Instr listInstr){
 	Instr instr = NEW(1, _Instr);
     instr->op           = INSTR_BLOC;
-    instr->yield        = InstrGetReturnExpr(listInstr);
+    instr->yield        = InstrGetReturnExpr(listInstr); 
     instr->listInstr    = listInstr;
     return instr; 
 }
@@ -117,7 +117,7 @@ void InstrAssertAssignIsOk(Expr left, Expr right){
         
     /* Si l'expression de gauche n'est pas une variable, 
        on a un probleme on peut pas modifier une constante */    
-    if ( left->op != VAR_CALL ) {
+    if ( left->op != VAR_CALL  && left->op != SELECTION) {
         sprintf(message, "Impossible de modifier une expression qui n'est pas une variable ou une selection.   op : %d", left->op);
         PrintError(message, left->lineno);
         exit(1);

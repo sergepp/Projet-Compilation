@@ -50,7 +50,7 @@ typedef struct __Expr {
   union {
     char *s;                          /* valeur de la feuille si op = CONST_STR ou VAR_CALL ou SELECTION */
     int i;                            /* valeur de la feuille si op = CONST_INT */
-    struct __Class* instance;         /* Valeur de la feuille si op = INSTANCE*/
+    struct __Class* instance;         /* Valeur de la feuille si op = INSTANCE  --> ( instanciation )*/
     struct __MethodCall* m;           /* valeur de la feuille si op = INSTANCE_METHOD_CALL  STATIC_METHOD_CALL */
     Var v;                            /* valeur de la feuille si op = STATIC_FIELD_ACCESS  */  
   } value; 
@@ -93,7 +93,6 @@ typedef struct __Method {
   bool  isStatic;
   Var   params;
   Expr this;
-  struct __Class* class;
   Scope scope;
   Expr  bodyExpr;
   Instr bodyInstr;
@@ -178,6 +177,7 @@ Class initStringClass() ;
 Class initVoidClass();
 
 Class initIntegerClass();
+bool InitializationFinished;
 
 void incPaddingNb();
 

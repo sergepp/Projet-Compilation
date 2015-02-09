@@ -1,6 +1,9 @@
 
+void ScopeInitForClass(Class class);
 
-Method FindMethodInScope( char* methodname, Scope scope);
+Method FindInstanceMethodInScope( char* methodname, Scope scope);
+Method FindMethodInScope( char* methodname, Scope scope, bool isStatic);
+Method FindStaticMethodInScope( char* methodname, Scope scope);
 
 Scope ScopeNew(char* name, Scope prev, Scope next, Var var);
 

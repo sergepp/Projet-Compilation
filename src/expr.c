@@ -302,7 +302,12 @@ void ExprPrint(Expr expr) {
                                printf("left  : \n"); ExprPrint(expr->left); 
                 printPadding();printf("op    : X \n"); 
                 printPadding();printf("right : \n"); ExprPrint(expr->right);break ; 
-            case VAR_CALL   : printf("Variable : %s\n",expr->value.s);    
+            case VAR_CALL   : printf("Variable : %s\n",expr->value.s);  
+            case INSTANCE_METHOD_CALL :   printf("left  : \n"); ExprPrint(expr->left); 
+                printPadding();printf("value.m->methodName    :  %s\n", expr->value.m->methodName);
+                break;
+            case INSTANCE :    printf("instance of : %s\n", expr->value.instance->name); break;
+                break; 
             default : printf("Format d'affichage non reconnu \n "); break;     
         }
          decPaddingNb();

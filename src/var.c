@@ -76,7 +76,7 @@ void AssertVarAreNotDupliqued(Var var){
     Var j; 
     while ( i != NULL ) {
         if ( i->class == NULL) {
-            sprintf(message, "Le type du parametre       hgkhgh %s n'existe pas\n", i->name);
+            sprintf(message, "Le type du parametre %s n'existe pas\n", i->name);
             PrintError(message, yylineno);
             exit(1);
         }

@@ -1,42 +1,24 @@
-class A(xc:Integer) is {
-  var v: Integer := 0;
-  def foo() returns Integer { "A::f()\n".println(); v := 2; return 6; }  
-  def f() returns Void { "A::f()\n".println(); v := 2; }
-  def g() returns Void { "A::g()\n".println(); v := 5; }
-  def toString() returns String := "0"   
+class Color(hexValue: String) { 
+    hexValue := hexValue;
+} is {
+    var static hexValue: String;
+    def static white() returns Color := new Color("000000")
 }
 
-class A1(xc:Integer) extends A(xc) is {
-    var v : Void;
-    var r: Integer;
-    def toGreatStringfhj() returns String := ""
-    def toGreatString() returns String := super.toString() & v 
-    def toGreatestString() returns String :=  ""
+class Point(xc: Integer, yc: Integer) {
+    x := xc;
+    y := yc; 
+}
+is {
+    var x: Integer;
+    var y: Integer;
 }
 
-class A2(m:Integer) extends A1(m) is {
-  var v : String := "hello"; 	 
-  def override f() returns Void { 
-      "A2::f()\n".println();
-      super.f();
-      v := "Hello";
-   }
-  def toStringRTE(xc: Integer) returns String := super.toString() & v
-  def  toGreatRTYString() returns String := super.toString() & v
+class ColoredPoint(xc: Integer, yc: Integer, c: Color) extends Point(xc, yc) {
+    col := c ;
+} is {
+    var col: Color;
 }
 
-{
-  var superH : A := new A();
-  var monA2 : A2 := new A2();
-  is
-  "Test des classes A et A2".println();
-  monA.f(); 
-  monA.toString().println();
-  monA.g();
-  monA.toString().println();
-  monA2.f();
-  monA2.toString().println();
-  monA2.g();
-  monA2.toString().println(); 
-  "\nDone !".println();
-}
+class DefaultPoint() extends ColoredPoint(0, 0, Color.white()) is {}
+{}

@@ -11,10 +11,11 @@ Scope ScopeNew(char* name, Scope prev, Scope next, Var var) {
 void ScopeInitForClass(Class class){
     /* On initialise le scope de toutes ses methodes */
     Method m = class->methods;
+
     
    
     while ( m != NULL ) {
-        /* Parametres de methodes */
+        /* Parametres de methodes */                
         char paramScopeName[128];
         sprintf(paramScopeName, "%s.params", class->name);
         Scope paramScope = ScopeNew(paramScopeName, NULL, NULL, m->params);  
@@ -24,7 +25,7 @@ void ScopeInitForClass(Class class){
          
         m->scope = paramScope;
         m = m->next;  
-    }
+    } 
 }
 
 void ScopeInitForMethod(Class class, Method method){
@@ -39,8 +40,19 @@ void ScopeInitForConstructor(Class class){
 
 
 
-Method FindMethodInScope( char* methodname, Scope scope) {
+Method FindInstanceMethodInScope(char* methodname, Scope scope) {
+    bool isStatic = FALSE;
+    Method m = FindMethodInScope(methodname, scope, isStatic);
+    return m ;
+}
 
+Method FindStaticMethodInScope(char* methodname, Scope scope) {
+    bool isStatic = TRUE;
+    Method m = FindMethodInScope(methodname, scope, isStatic);
+    return m ; 
+}
+
+Method FindMethodInScope( char* methodname, Scope scope, bool isStatic) {
 
     if ( scope == NULL ) 
         return NULL;
@@ -48,15 +60,16 @@ Method FindMethodInScope( char* methodname, Scope scope) {
     Method m = scope->method;
     while ( m != NULL ){ 
     
-        if ( m != NULL &&  strcmp(m->name, methodname) == 0 ) {
+        if ( m != NULL &&  strcmp(m->name, methodname) == 0 && m->isStatic == isStatic ) {
            return m ;  
         }
         m = m->next;
     }
-    m = FindMethodInScope(methodname, scope->next);
+    m = FindMethodInScope(methodname, scope->next, isStatic);
     return m ; 
 
 }
+
 
 Var FindVarInScope(char* varname, Scope scope) {
 
@@ -265,18 +278,18 @@ void ClassAssertScopeAreCorrect(Class class){
 
 
 void initializeScope(){
-    defaultClassDefsPlus(NULL); 
-    printf("initializeScope\n\n");
     MainScope = ScopeNew("Main", NULL, NULL, NULL) ;
     currentScope = MainScope;
 }
 
 void ClassRegisterInScope(Class cl){
      
-    if ( AllDefinedClasses == NULL ){
-        defaultClassDefsPlus(cl);
-    }
     
+    if (   strcmp(cl->name, "Integer") == 0
+        || strcmp(cl->name, "String")  == 0
+        || strcmp(cl->name, "Void")    == 0 )
+            return ;
+            
     Class i = AllDefinedClasses ;
     while ( i->next != NULL ) {
         i = i->next;        
