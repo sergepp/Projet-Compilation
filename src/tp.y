@@ -15,10 +15,6 @@
  * par precedence croissante d'operateurs.
  *
  */
-%nonassoc ELSE
-%nonassoc THEN
-%nonassoc IF
-%nonassoc RETURN
 %nonassoc RELOP
 %right ASSIGN
 %nonassoc NEW
@@ -31,7 +27,11 @@
 %left ID CLASS_TYPE
 %left '(' ')'
 %left '{' '}'
-
+%nonassoc IF RETURN
+%nonassoc ELSE /*
+%nonassoc THEN
+%nonassoc IF 
+%nonassoc RETURN*/
 
 /** 
  * Voir la definition de YYSTYPE dans main.h 
@@ -40,13 +40,13 @@
  * de l'union YYSTYPE (par exemple la variante D ou S, etc.)
  * La "valeur" associee a un terminal utilise toujours la meme variante
  */
-%type <Expr>        expr booleanExpr arithmExpr  constant  Opt_L_expr L_expr instanciation  concatExpr  selection
+%type <Expr>        expr booleanExpr arithmExpr  constant  Opt_L_expr L_expr instanciation  concatExpr  selection 
 %type <Program>     program
 %type <MethodCall>   Opt_extendsDecl  extendsDecl
 %type <Class>       L_classDecl classDecl 
 %type <Var>         L_varDecl varDecl  L_fieldDecl fieldDecl  Opt_L_classParamDecl L_classParamDecl classParamDecl Opt_L_methodParamDecl L_methodParamDecl methodParamDecl 
 %type <Method>      L_methodDecl methodDecl 
-%type <Instr>       proceduralBloc functionalBloc L_instr instr instructionBloc  methodBody  Opt_constructorBody constructorBody 
+%type <Instr>       ifThenElseInstr proceduralBloc functionalBloc L_instr instr instructionBloc  methodBody  Opt_constructorBody constructorBody 
 %{
 #define YYDEBUG 1
 
@@ -149,12 +149,12 @@ fieldDecl :  varDecl                                {  $$ = $1; }
 L_methodDecl : methodDecl      { $$ = $1; }
     | L_methodDecl methodDecl  { $$ = MethodDeclSetNext($1, $2); }
 ;
-methodDecl : DEF OVERRIDE ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE methodBody { OverrideMethodDeclAssertIsOk($3, $5, $8, $9, NULL); $$=OverrideMethodDecl($3, $5, $8, $9, NULL); }
-        |    DEF OVERRIDE ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE ASSIGN expr{ OverrideMethodDeclAssertIsOk($3, $5, $8, NULL, $10);$$=OverrideMethodDecl($3, $5, $8, NULL, $10);} 
-        |      DEF STATIC ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE methodBody { StaticMethodDeclAssertIsOk($3, $5, $8, $9, NULL);   $$=StaticMethodDecl($3, $5, $8, $9, NULL);}
-        |      DEF STATIC ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE ASSIGN expr{ StaticMethodDeclAssertIsOk($3, $5, $8, NULL, $10);  $$=StaticMethodDecl($3, $5, $8, NULL, $10);}
-        |             DEF ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE methodBody { MethodDeclAssertIsOk($2, $4, $7, $8, NULL);         $$=MethodDecl($2, $4, $7, $8, NULL);}
-        |             DEF ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE ASSIGN expr{ MethodDeclAssertIsOk($2, $4, $7, NULL, $9);         $$=MethodDecl($2, $4, $7, NULL, $9);}
+methodDecl : DEF OVERRIDE ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE methodBody { $$=OverrideMethodDecl($3, $5, $8, $9, NULL); }
+        |    DEF OVERRIDE ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE ASSIGN expr{ $$=OverrideMethodDecl($3, $5, $8, NULL, $10);} 
+        |      DEF STATIC ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE methodBody { $$=StaticMethodDecl($3, $5, $8, $9, NULL);}
+        |      DEF STATIC ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE ASSIGN expr{ $$=StaticMethodDecl($3, $5, $8, NULL, $10);}
+        |             DEF ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE methodBody { $$=MethodDecl($2, $4, $7, $8, NULL);}
+        |             DEF ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE ASSIGN expr{ $$=MethodDecl($2, $4, $7, NULL, $9);}
 ;
 
 Opt_L_methodParamDecl  :                            { $$ = NULL; }
@@ -171,17 +171,17 @@ methodBody :  proceduralBloc                        { $$ = $1; }
 ;
 
 // Declaration d'un bloc d'instruction
-instructionBloc : '{'  '}'                          { $$ = InstrFromInstrBloc(NULL); }
+instructionBloc : '{'  '}'                          { $$ = InstrFromInstrBloc(NULL);        }
     |   '{' L_instr '}'                             { $$ = InstrFromInstrBloc($2);          }
 ;
-proceduralBloc :  '{'  '}'                          { $$ = InstrFromInstrBloc(NULL); }
+proceduralBloc :  '{'  '}'                          { $$ = InstrFromInstrBloc(NULL);        }
     |   '{' L_instr '}'                             { $$ = InstrFromInstrBloc($2);          }
     |   '{' L_varDecl IS L_instr '}'                { $$ = InstrFromProcBloc($2, $4);       }
 ;    
 
-functionalBloc : '{' YIELD expr '}'                 { InstrAssertFnBlocIsOk(NULL, NULL, $3);  $$ = InstrFromFnBloc(NULL, NULL, $3); }
-    |    '{' L_instr YIELD expr '}'                 { InstrAssertFnBlocIsOk(NULL, $2,   $4);  $$ = InstrFromFnBloc(NULL, $2,   $4); }
-    |    '{' L_varDecl IS L_instr YIELD expr '}'    { InstrAssertFnBlocIsOk($2,   $4,   $6);  $$ = InstrFromFnBloc($2,   $4,   $6); }
+functionalBloc : '{' YIELD expr '}'                 {  $$ = InstrFromFnBloc(NULL, NULL, $3); }
+    |    '{' L_instr YIELD expr '}'                 {  $$ = InstrFromFnBloc(NULL, $2,   $4); }
+    |    '{' L_varDecl IS L_instr YIELD expr '}'    {  $$ = InstrFromFnBloc($2,   $4,   $6); }
 ;
 
 L_instr : instr         { $$ = $1; }
@@ -193,7 +193,9 @@ instr :  expr ';'                       { $$ = InstrFromExpr($1);   }
     | proceduralBloc                    { $$ = $1; }
     | functionalBloc                    { $$ = $1; }
     | expr ASSIGN expr ';'              { $$ = InstrFromAssign($1, $3); }
-    | IF expr THEN L_instr ELSE L_instr { InstrAssertIfIsOk($2, $4, $6);  $$ = InstrFromIf($2, $4, $6); }
+    | ifThenElseInstr  %prec UNARY      { $$ = $1; }
+;
+ifThenElseInstr :  IF expr THEN L_instr ELSE L_instr { $$ = InstrFromIf($2, $4, $6); }
 ;
 Opt_L_expr :            { $$ = NULL; }
     | L_expr            { $$ = $1; }
@@ -211,8 +213,8 @@ expr : ID           { /*ExprAssertIDIsOk($1);*/ $$ = ExprFromVar($1); } // Const
     | selection     { $$ = $1; } 
     | '(' expr ')'  { $$ = $2; }      
 ;
-selection :   expr '.' ID                    { ExprAssertFieldAccessIsOk($1,$3);            $$ = ExprFromFieldAccess($1, $3);      } 
-    |   CLASS_TYPE '.' ID                    { AssertClassExists($1);  ExprAssertStaticFieldAccessIsOk($1,$3);      $$ = ExprFromStaticFieldAccess($1, $3); }
+selection :   expr '.' ID                    { ExprAssertFieldAccessIsOk($1,$3);                                     $$ = ExprFromFieldAccess($1, $3);           } 
+    |   CLASS_TYPE '.' ID                    { AssertClassExists($1);  ExprAssertStaticFieldAccessIsOk($1,$3);       $$ = ExprFromStaticFieldAccess($1, $3);     }
     |   CLASS_TYPE '.' ID '(' Opt_L_expr ')' { AssertClassExists($1);  ExprAssertStaticMethodAccessIsOk($1,$3, $5);  $$ = ExprFromStaticMethodAccess($1, $3, $5);}
     |         expr '.' ID '(' Opt_L_expr ')' { $$ = ExprFromMethodAccess($1, $3, $5);  }    
 ; 
@@ -235,7 +237,7 @@ arithmExpr : expr ADD expr      { $$ = ExprFromArithmetic($1, ADD, $3); }
     | ADD expr %prec UNARY      { $$ = $2; }   
 ;
 
-booleanExpr : expr RELOP expr   { $$ = ExprFromBoolean($1, yylval.I, $3); }
+booleanExpr : expr RELOP expr   { $$ = ExprFromBoolean($1, $2, $3);  }
 ;
 
 L_varDecl : varDecl         { $$ = $1;  VarAddToCurrentScope($$); }

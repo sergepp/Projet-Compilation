@@ -3,6 +3,9 @@ void AssertInstrAssignIsOk(Instr instr);
 
 Expr InstrGetReturnExpr(Instr listInstr);
 
+
+bool InstrHasReturn(Instr instr);
+
 Expr InstrGetReturnExprOrElse(Instr listInstr, Expr expr);
 
 void InstrAssertProcBlocIsOk(Var var,Instr instr);
@@ -10,9 +13,7 @@ void InstrAssertProcBlocIsOk(Var var,Instr instr);
 Instr InstrFromProcBloc(Var vars,Instr listInstr);
 
 Instr InstrFromInstrBloc(Instr listInstr);
-
-void InstrAssertFnBlocIsOk(Var vars, Instr listInstr, Expr expr);
-
+ 
 Instr InstrFromFnBloc(Var vars, Instr listInstr, Expr expr);
 
 Instr InstrSetNext(Instr instr, Instr next);

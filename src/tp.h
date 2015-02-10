@@ -27,7 +27,7 @@ typedef int bool;
 #define LTE 11
 #define EQ  12
 #define NEQ 13
-#define GT 14
+#define GT  14
 #define GTE 15
 
 #define FN_BLOC 16

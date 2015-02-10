@@ -1,7 +1,6 @@
 
 void InstrAssertProcBlocIsOk(Var var,Instr instr){
-	printf("InstrAssertProcBlocIsOk not implemented \n");	
-	
+	printf("InstrAssertProcBlocIsOk not implemented \n");
 }
 
 
@@ -21,12 +20,7 @@ Instr InstrFromInstrBloc(Instr listInstr){
     instr->listInstr    = listInstr;
     return instr; 
 }
-
-void InstrAssertFnBlocIsOk(Var vars, Instr listInstr, Expr expr) {
-	printf("InstrAssertFnBlocIsOk not implemented \n");
-	
-
-}
+ 
 
 
 Expr InstrGetReturnExprOrElse(Instr instr, Expr expr) {
@@ -49,6 +43,26 @@ Expr InstrGetReturnExprOrElse(Instr instr, Expr expr) {
     return expr; 
 }
 
+bool InstrHasReturn(Instr instr){
+    if ( instr == NULL ) 
+        return FALSE;
+                
+    if ( instr->op == RETURN ) 
+        return TRUE;
+            
+    Instr i = instr->listInstr;
+    while ( i != NULL  ) {
+         
+       if ( i->op == RETURN ) 
+            return TRUE;
+            
+       i = i->next; 
+    }    
+      
+    return FALSE; 
+}
+
+
 Expr InstrGetReturnExpr(Instr instr) {
     Expr result =  InstrGetReturnExprOrElse(instr, voidInstance);
     return result;
@@ -61,7 +75,7 @@ Expr InstrGetBlocReturnExprOrElse(Instr listInstr, Expr expr) {
 Instr InstrFromFnBloc(Var vars, Instr listInstr, Expr expr){
 	Instr instr = NEW(1, _Instr);
     instr->op           = FN_BLOC;
-    instr->yield        = InstrGetReturnExprOrElse(listInstr, expr);
+    instr->yield        = InstrGetReturnExprOrElse(listInstr, expr);  
     instr->var          = vars;
     instr->listInstr    = listInstr;
     return instr; 
@@ -117,8 +131,11 @@ void InstrAssertAssignIsOk(Expr left, Expr right){
         
     /* Si l'expression de gauche n'est pas une variable, 
        on a un probleme on peut pas modifier une constante */    
-    if ( left->op != VAR_CALL  && left->op != SELECTION) {
-        sprintf(message, "Impossible de modifier une expression qui n'est pas une variable ou une selection.   op : %d", left->op);
+    if (   left->op != VAR_CALL  
+        && left->op != SELECTION 
+        && left->op != INSTANCE_FIELD_ACCESS 
+        && left->op != STATIC_FIELD_ACCESS  ) {
+        sprintf(message, "Impossible de modifier une expression qui n'est pas une variable   op : %d", left->op);
         PrintError(message, left->lineno);
         exit(1);
     }
@@ -162,7 +179,7 @@ Instr InstrFromReturn(Expr expr){
 }
 
 Instr InstrFromIf(Expr cond, Instr thenInstr, Instr elseInstr){
-	Instr instr = NEW(1, _Instr);
+	Instr instr = NEW(1, _Instr); 
     instr->op           = IF;
     instr->cond         = cond;
     instr->thenInstr    = thenInstr;
@@ -180,14 +197,15 @@ void InstrPrint(Instr inst) {
     while (instrs != NULL) {
         printPadding();
         switch(instrs->op) {
-            case EXPR       : printf("Expression\n");   printPadding();   ExprPrintResult(ExprEval(instrs->expr)) ; break;
+            case EXPR       : printf("Expression\n");   /*printPadding();   ExprPrintResult(ExprEval(instrs->expr)) ;*/ break;
             case ASSIGN     : printf("Assign \n"); break;
             case INSTR_BLOC : printf("Bloc Instruction \n"); InstrPrint(instrs->listInstr); break;
             case PROC_BLOC  : printf("Bloc Procedural \n"); InstrPrint(instrs->listInstr); break;
             case FN_BLOC    : printf("Bloc Fonctionel\n"); InstrPrint(instrs->listInstr); break;
             case IF         : printf("If Then Else\n"); break;
+            case RETURN     : printf("Return expr : %s\n", instrs->expr->type->name); break;            
             
-            default : printf("Affichage de L'instruction Non encore implementée \n "); break;     
+            default : printf("Affichage de L'instruction Non encore implementée  instrs->op : %d\n", instrs->op ); break;     
         }     
         instrs = instrs->next; 
     }    

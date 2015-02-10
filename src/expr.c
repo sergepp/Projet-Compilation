@@ -13,26 +13,23 @@ void ExprAssertFieldAccessIsOk(Expr e, char* name){
     }
 }
 
-Expr ExprFromStaticFieldAccess(char* classname, char* name){
+Expr ExprFromStaticFieldAccess(char* classname, char* fieldName){
 
-    Expr expr  = NEW(1, _Expr);
-    expr->op = STATIC_FIELD_ACCESS;
-    expr->lineno = yylineno;
-    expr->value.v = NEW(1, _Var);
-    expr->value.v->class = GetClassByName(classname);
-    expr->value.v->name = name;
+    Expr e  = NEW(1, _Expr);
+    e->op = STATIC_FIELD_ACCESS;
+    e->lineno = yylineno;
+    e->isEvaluated = TRUE;
     
-    expr->isEvaluated = FALSE;
-    expr->lineno = yylineno;
-    
-    return expr;
+    e->value.s = fieldName;
+    e->type = GetClassByName(classname);
+    return e; 
 }
 
 Expr ExprFromFieldAccess(Expr e, char* name){  
    
     Expr expr = NEW(1, _Expr);
     expr->left = e; 
-    expr->op = SELECTION;
+    expr->op =  INSTANCE_FIELD_ACCESS;
      
     expr->value.s = name;
     expr->isEvaluated = TRUE;
@@ -269,8 +266,7 @@ Expr ExprFromBoolean(Expr left, int op, Expr right){
     Expr expr = NEW(1, _Expr);
     expr->left = left; 
     expr->op = op; 
-    expr->type = Integer; 
-    
+    expr->type = Integer;
     expr->isEvaluated = FALSE;
     expr->right = right;
     expr->lineno = yylineno;    

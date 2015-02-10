@@ -5,9 +5,15 @@ Method FindInstanceMethodInScope( char* methodname, Scope scope);
 Method FindMethodInScope( char* methodname, Scope scope, bool isStatic);
 Method FindStaticMethodInScope( char* methodname, Scope scope);
 
-Scope ScopeNew(char* name, Scope prev, Scope next, Var var);
 
-Var  FindVarInScope(char* varName, Scope scope);
+Var FindVarInScope(char* name, Scope scope, bool isStatic);
+
+Var FindInstanceVarInScope(char* name, Scope scope);
+
+Var FindStaticVarInScope(char* name, Scope scope);
+
+Scope ScopeNew(char* name, Scope prev, Scope next, Var var);
+ 
 
 bool IsVarInCurrentScope(char* varName, Scope scope);
 

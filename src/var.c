@@ -26,7 +26,7 @@ Var GetVarByName(char* varName, Scope scope){
         while ( m != NULL ) {
             
             if ( strcmp(m->name, CurrentMethodName) == 0 ) {
-                Var v = FindVarInScope(varName, scope);
+                Var v = FindInstanceVarInScope(varName, scope);
                 return v;
             }
             
@@ -116,9 +116,9 @@ void AssertVarDeclIsOk(char* varName, char* classname, Expr e) {
 
 Var VarDecl(char* name, char* className, Expr e) {
 
-    if (strcmp(name, "this") == 0 || strcmp(name, "super") == 0  ) {
+    if (strcmp(name, "this") == 0 || strcmp(name, "super") == 0 || strcmp(name, "void") == 0  ) {
          char message[128];  
-         sprintf(message, "%s est un mot reserve et ne peut etre utiliser comme nom de variable ou de parametre\n", name);
+         sprintf(message, "%s est un mot reserve et ne peut etre utilise comme nom de variable ou de parametre\n", name);
         PrintError(message, yylineno);
         exit(1);
     } 

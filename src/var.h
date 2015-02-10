@@ -3,11 +3,6 @@ Var GetVarByName(char* varName, Scope scope);
 
 void StaticVarDeclAssertIsOk(char* name, char* classType, Expr expr);
 
-Var FindVarInScope(char* name, Scope scope, bool isStatic);
-
-Var FindInstanceVarInScope(char* name, Scope scope, bool isStatic);
-
-Var FindStaticVarInScope(char* name, Scope scope);
 
 void AssertVarAreNotDupliqued(Var var);
 

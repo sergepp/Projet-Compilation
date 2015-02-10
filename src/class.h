@@ -47,7 +47,7 @@ void ConstructorBodyAssertIsOk(Instr consBody);
  Method ClassInitConstructor(Class class, Var classParamDecl, Instr constructorBody);
 Class ClassDeclSetNext(Class class, Class next);
 void ClassDeclAssertIsOk(Class class);
-void OverrideMethodDeclAssertIsOk(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr); 
+ 
 
 
 Class GetClassByName(char* className);
@@ -56,11 +56,10 @@ Method MethodDeclSetNext(Method method, Method next);
 
 Method OverrideMethodDecl(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr);
 
-Method StaticMethodDeclAssertIsOk(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr); 
 
 Method StaticMethodDecl(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr);
 
-void MethodDeclAssertIsOk(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr); 
+ 
 
 Method MethodDecl(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr);  
  

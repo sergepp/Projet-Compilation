@@ -11,20 +11,25 @@ Scope ScopeNew(char* name, Scope prev, Scope next, Var var) {
 void ScopeInitForClass(Class class){
     /* On initialise le scope de toutes ses methodes */
     Method m = class->methods;
-
-    
    
     while ( m != NULL ) {
+        
+        /* Eventuelles variable declaree */
+        Scope localVar = ScopeNew("", NULL, NULL, NULL);
+        if (  m->bodyInstr != NULL && m->bodyInstr->var != NULL ) {
+            localVar->var =  m->bodyInstr->var;
+        }
         /* Parametres de methodes */                
         char paramScopeName[128];
         sprintf(paramScopeName, "%s.params", class->name);
-        Scope paramScope = ScopeNew(paramScopeName, NULL, NULL, m->params);  
+        Scope paramScope = ScopeNew(paramScopeName, localVar, NULL, m->params);
+        localVar->next = paramScope;
         
         /* Champ de la classe */
-        paramScope->next = class->scope;
+        localVar->next->next = class->scope;
          
-        m->scope = paramScope;
-        m = m->next;  
+        m->scope = localVar;
+        m = m->next;        
     } 
 }
 
@@ -36,8 +41,6 @@ void ScopeInitForConstructor(Class class){
 
 
 }
-
-
 
 
 Method FindInstanceMethodInScope(char* methodname, Scope scope) {
@@ -53,7 +56,6 @@ Method FindStaticMethodInScope(char* methodname, Scope scope) {
 }
 
 Method FindMethodInScope( char* methodname, Scope scope, bool isStatic) {
-
     if ( scope == NULL ) 
         return NULL;
         
@@ -66,12 +68,25 @@ Method FindMethodInScope( char* methodname, Scope scope, bool isStatic) {
         m = m->next;
     }
     m = FindMethodInScope(methodname, scope->next, isStatic);
-    return m ; 
-
+    return m;
 }
 
 
-Var FindVarInScope(char* varname, Scope scope) {
+Var FindInstanceVarInScope(char* name, Scope scope){
+    bool isStatic = FALSE;
+    Var v = FindVarInScope  (name, scope, isStatic);
+    return v ;
+}
+
+Var FindStaticVarInScope(char* name, Scope scope){
+    bool isStatic = TRUE;
+    Var v = FindVarInScope(name, scope, isStatic);
+    return v ;
+}
+
+
+
+Var FindVarInScope(char* varname, Scope scope, bool isStatic) {
 
     if ( scope == NULL ) 
         return NULL;
@@ -79,12 +94,12 @@ Var FindVarInScope(char* varname, Scope scope) {
     Var i = scope->var;
     while ( i != NULL ){ 
     
-        if ( i != NULL &&  strcmp(i->name, varname) == 0 ) {
+        if ( i != NULL &&  strcmp(i->name, varname) == 0  && i->isStatic == isStatic ) {
            return i ;  
         }
         i = i->next;
     }
-    i = FindVarInScope(varname, scope->next);
+    i = FindVarInScope(varname, scope->next, isStatic);
     return i ; 
 }
 

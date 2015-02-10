@@ -25,18 +25,21 @@ Class ClassDeclComplete(MethodCall extendsCall,
                 Instr     constructorBody, 
                 Var       fieldDecl, 
                 Method    methodDecl){
+       printf("ClassDeclCompleting  \n");
        Class class = CurrentClass; 
        class->extends    = extendsCall;         
 
        class->scope->var = class->fields ;
        class->scope->method = class->methods ;       
        
+       printf("Verifying it is not void  \n");
         if (  strcmp(class->name, "Void")  != 0 ) {
             class->scope->method->next = methodDecl ;   
             class->methods->next = methodDecl;   
             class->methods->bodyInstr = constructorBody;    
         }
-             
+         
+       printf("Checking extends ddeclaration  \n");    
        if ( extendsCall != NULL ) {
             class->fields->next = NewSuper(class->extends->class, NULL);
             class->fields->next->next = fieldDecl; 
@@ -44,7 +47,8 @@ Class ClassDeclComplete(MethodCall extendsCall,
        } else {
             class->fields->next = fieldDecl ; 
        }
-  
+        
+       printf("Init scope for class  \n");
        ScopeInitForClass(class);
    
        ClassDefPrint(class);
@@ -100,29 +104,18 @@ void ClassPrint(Class c){
     incPaddingNb();
 }     
 
-void OverrideMethodDeclAssertIsOk(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr){
-    printf("Not implemented\n");
-} 
 Method OverrideMethodDecl(char* name, Var paramDecl, char* returnClassName, Instr methodBody, Expr expr){
     Method method       =   MethodDecl(name, paramDecl,returnClassName, methodBody, expr);    
     method->isOverride    = TRUE;  
     return method;
 }
 
-Method StaticMethodDeclAssertIsOk(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr){
-    printf("Not implemented\n");
-    return NEW(1, _Method);
-} 
 Method StaticMethodDecl(char* name, Var paramDecl, char* returnClassName, Instr methodBody, Expr expr){
     Method method       =   MethodDecl(name, paramDecl,returnClassName, methodBody, expr);    
     method->isStatic    = TRUE;        
     return method; 
 }
 
-void MethodDeclAssertIsOk(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr){
-    printf("Not implemented\n");
-    
-} 
 Method MethodDecl(char* name, Var paramDecl, char* returnClassName, Instr bodyInstr, Expr bodyExpr){
     Method method       = NEW(1, _Method);
     method->name        = name; 
@@ -144,8 +137,7 @@ Method MethodDecl(char* name, Var paramDecl, char* returnClassName, Instr bodyIn
      }
     else { 
         method->bodyInstr = bodyInstr;  
-    }
-        
+    }  
     return method; 
 } 
  
@@ -254,12 +246,14 @@ void ExtendsDeclAssertIsOk( char* className, Expr expr){
 
 void AssertClassExists( char* className ) {
     char message[128];
+
     Class c = GetClassByName(className);
     if ( c == NULL ){ 
         sprintf(message, "Operation impossible. la classe %s  n'existe pas\n", className);
         PrintError(message, yylineno);
         exit(1);
      } 
+     
 }
 
 MethodCall ExtendsDecl(char* className, Expr expr, char* methodName){
@@ -509,7 +503,7 @@ Expr ClassNewInstanceOf(char* className, Expr args) {
     Expr expr = NEW(1, _Expr);
     
     Class class =  GetClassByName(className);
-    
+
     instance->name       = class->name;
     instance->scope      = class->scope;
     
@@ -524,19 +518,19 @@ Expr ClassNewInstanceOf(char* className, Expr args) {
     instance->fields     = vinst;
     vinst->next = instance->fields->next; /* On prend le next pour sauter la premiere varable de champ qui est "this" */
     Var vclass = class->fields;
-    Expr e = args; 
+    Expr e = args; /*
     while (e != NULL ) {
         vinst = NEW(1, _Var);
         vinst->name = vclass->name;
         vinst->lineno = vclass->lineno;
         vinst->class = vclass->class;
-        vinst->value = e; /* Seule valeur a supprimer quand on voudra liberer de la memoire les autres sont partagés avec vclass */
+        vinst->value = e; // Seule valeur a supprimer quand on voudra liberer de la memoire les autres sont partagés avec vclass 
         
         e = e->next;
         vinst = vinst->next;
         vclass = vclass->next;
     } 
-    
+    */
     expr->op = INSTANCE;
     expr->type = class;
     expr->lineno = yylineno;
@@ -668,7 +662,7 @@ void ClassTypeAndRedirect(Class class){
      Scope sc = ScopeNew("Class", NULL,  NULL, class->fields);
      while( fields != NULL  ) {
          e = fields->value;
-         if ( e != NULL ) {     
+         if ( e != NULL ) {    
             ReplaceExprViaScope(e, sc);
             ExprAssertInheritsType(fields->class, fields->value);
          }     
@@ -685,8 +679,10 @@ void ClassTypeAndRedirect(Class class){
     
      method = class->methods->next;
      while ( method != NULL ) {
+          printf("Method %s \n", method->name);
           if ( method->bodyExpr == NULL ) {
                 ReplaceVarInInstr(method->bodyInstr, method->scope);
+                
                 if ( strcmp(method->returnClassName, method->bodyInstr->yield->type->name) != 0  ) {
                     sprintf(message, "Dans la methode %s Le type de retour declaree n'est pas compatible avec le bloc (%s) := (%s)", 
                                      method->name, 
@@ -710,44 +706,20 @@ void ClassTypeAndRedirect(Class class){
            method = method->next;
      }
       printf("\t[Finished !]\n"); 
-      
-      /*
      
-     if (   strcmp(class->name, "Integer") == 0
-        ||  strcmp(class->name, "String")  == 0
-        || strcmp(class->name, "Void")    == 0 )  {
-        return ;
-    }
-     printf("\n\nDans la class %s\n", class->name);
-     Method m = class->methods->next;
-     while ( m != NULL ) {
-        if ( m->bodyExpr == NULL ) {
-            printf("\t%s() ", m->name); 
-            printf("de type %s", m->returnClassName);
-            printf("\t\t Body de type  %s\n", m->bodyInstr->yield->type->name);
-       } 
-       else  {
-            printf("\t%s() ", m->name); 
-            
-            printf("de type %s", m->returnClassName);
-            printf("\t\t Body de type %s\n", m->bodyExpr->type->name);
-        }
-        m = m->next;
-    }
-    
-    */
-    
+     
+       
 }
 
 
 void ReplaceVarInInstr(Instr instr, Scope sc){
     
-    if ( instr == NULL || sc == NULL ) 
+    if ( instr == NULL  ) 
         return ;
    
     Instr i = instr;
     Scope s;
-    
+    char message[128];
     switch(instr->op) { 
         case RETURN     :  
         case EXPR       :          
@@ -765,23 +737,27 @@ void ReplaceVarInInstr(Instr instr, Scope sc){
                 ReplaceExprViaScope(instr->yield, sc);
             
             i = instr->listInstr;
-            
             if ( instr->op == INSTR_BLOC ) 
                 s = sc; 
-            else 
+            else if ( i != NULL ) 
                 s = ScopeNew("Scope Anonyme\0", NULL, sc, i->var);
-            
             while ( i != NULL ) {
-                ReplaceVarInInstr(i, s);             
+                ReplaceVarInInstr(i, s);            
                 i = i->next ; 
             } 
-
-            instr->yield = InstrGetReturnExpr(instr);               
+            if ( InstrHasReturn(instr) == TRUE  ) { 
+               instr->yield = InstrGetReturnExpr(instr);    
+            }
             break;
         case IF         : 
             ReplaceExprViaScope(instr->cond, sc);            
             ReplaceVarInInstr(instr->thenInstr, sc);
             ReplaceVarInInstr(instr->elseInstr, sc);
+            if ( strcmp(instr->cond->type->name, "Integer") != 0 ) {
+                    sprintf(message, "La condition pour un IF doit etre de type Integer au lieu de (%s)", instr->cond->type->name);
+                    PrintError(message, instr->cond->lineno);
+                    exit(1);
+            }
             break;
         
         default : printf("ReplaceVarInInstr Non encore implementée  instr->op : %d\n ", instr->op); break;     
@@ -802,28 +778,63 @@ void ReplaceExprViaScope(Expr expr, Scope scope){
     Method m;
     switch(expr->op) {
         case CONST_INT      :  
-        case CONST_VOID     : 
-        case CONST_STR      :   break ;
+        case CONST_VOID     :
+        case CONST_STR      : 
+        case INSTANCE       :   break ;
         case ADD            : 
         case SUB            :           
         case DIV            :
         case MUL            :
-        case CONCAT         :  
+        case CONCAT         : 
+        case EQ             : 
+        case NEQ            : 
+        case GT             : 
+        case GTE            : 
+        case LT             : 
+        case LTE            : 
             if ( scope == NULL ) break;
             ReplaceExprViaScope(expr->left, scope);
             ReplaceExprViaScope(expr->right, scope); 
-            break ;
+            break ; 
         case SELECTION      :
-            if ( scope == NULL ) break;
-            ReplaceExprViaScope(expr->left, scope);
-            ExprAssertFieldAccessIsOk(expr->left, expr->value.s);
+            sprintf(message, "CETTE CONDITION NE DOIT PLUS JAMAIS ETRE SATISFAITE \n");
+                PrintError(message, expr->lineno);
+                exit(1);
             break ;
+        case STATIC_FIELD_ACCESS  : 
+            
+             if ( scope == NULL ) break;
+
+             v  = FindStaticVarInScope(expr->value.s, expr->type->scope);
+             if (  v == NULL ) {   
+                sprintf(message, "Champ Static %s inconnu\n", expr->value.s);
+                PrintError(message, expr->lineno);
+                exit(1);
+             } 
+             expr->type = v->class;
+             
+            break;
+         case INSTANCE_FIELD_ACCESS  : 
+                 
+            if ( scope != NULL ) 
+             ReplaceExprViaScope(expr->left, scope);
+             
+             v = FindInstanceVarInScope(expr->value.s, expr->left->type->scope);
+             if (  v == NULL ) {   
+                sprintf(message, "Champ %s inconnu dans l'instance de classe %s ( Est-il définit ? Est-il static ? )\n", expr->value.s, expr->left->type->name );
+                PrintError(message, expr->lineno);
+                exit(1);
+             } 
+             expr->type = v->class;
+             
+            break;
         case VAR_CALL   : 
              /* La variable a t elle ete declaree dans le scope ?  */
              
              if ( scope == NULL ) break;
 
-             v  = FindVarInScope(expr->value.s, scope);
+             v  = FindInstanceVarInScope(expr->value.s, scope);
+
              if (  v == NULL ) {   
                 sprintf(message, "Identifant %s inconnu\n", expr->value.s);
                 PrintError(message, expr->lineno);
@@ -832,9 +843,7 @@ void ReplaceExprViaScope(Expr expr, Scope scope){
              expr->type = v->class;
              
              break;
-        case INSTANCE : 
-            
-            break;
+             
         case INSTANCE_METHOD_CALL : 
                             
             if ( scope != NULL ) 
@@ -842,6 +851,7 @@ void ReplaceExprViaScope(Expr expr, Scope scope){
              
              m = FindInstanceMethodInScope(expr->value.m->methodName, expr->left->type->scope);
              if ( m == NULL ) { 
+                ExprPrint(expr->left);
                 sprintf(message, "Methode d'instance \"%s\" inconnue dans la classe %s ( Est-elle definie ? Est-elle static ? )  ",  expr->value.m->methodName,  expr->left->type->name);
                 PrintError(message, expr->lineno);
                 exit(1);

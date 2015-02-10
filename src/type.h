@@ -68,7 +68,7 @@ typedef struct __Field {
 
 
 typedef struct __Instr {  
-  int op;
+    int op;
     Scope scope;
     
     Expr expr;                  /* valeur de la feuille si op = EXPR */
@@ -76,7 +76,8 @@ typedef struct __Instr {
     Var var;                    /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC  */
     struct __Instr* listInstr;  /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC ou INSTR_BLOC */                   
     Expr leftExpr;              /* valeur de la feuille si op = ASSIGN  ou SELECTION*/
-    Expr rightExpr;             /* valeur de la feuille si op = ASSIGN */    
+    Expr rightExpr;             /* valeur de la feuille si op = ASSIGN */   
+     
     Expr cond;                  /* valeur de la feuille si op = IF */
     struct __Instr* thenInstr;
     struct __Instr* elseInstr; 
