@@ -16,6 +16,7 @@ class A2() extends A() is {
   def  toString() returns String := super.toString() & v
   
 }
+ 
 
 { 
   var monA : A := new A();
@@ -23,6 +24,9 @@ class A2() extends A() is {
   var i : Integer := 9;
   is
   i := 9999 ; 
+  ( 1 + i ).println();
+  if ( 0 = 1 ) then 4.println(); else (-1).println(); 
+  
   i.println();
   return void;
   

@@ -4,19 +4,14 @@ Class ClassDecl(char*   className, Var classParamDecl) {
     Class class =  NEW(1, _Class);
     class->name       = className;
     class->fields   = NewThis(class, NULL);
-    
-    printf("\n\nThis instanciated %s\n", className);
-    
+        
     if (  InitializationFinished == TRUE )
         ClassRegisterInScope(class);
     
     class->scope = ScopeNew(class->name, NULL, NULL,  NULL);
-    printf("Class registered in scope\n");
     class->lineno = yylineno;
     if (  strcmp(className, "Void")  != 0 ) 
         class->methods  = ClassInitConstructor(class, classParamDecl, NULL);    
-
-    printf("Constructor initialized\n");
     
     return class;
 }
@@ -25,21 +20,18 @@ Class ClassDeclComplete(MethodCall extendsCall,
                 Instr     constructorBody, 
                 Var       fieldDecl, 
                 Method    methodDecl){
-       printf("ClassDeclCompleting  \n");
        Class class = CurrentClass; 
        class->extends    = extendsCall;         
 
        class->scope->var = class->fields ;
        class->scope->method = class->methods ;       
        
-       printf("Verifying it is not void  \n");
         if (  strcmp(class->name, "Void")  != 0 ) {
             class->scope->method->next = methodDecl ;   
             class->methods->next = methodDecl;   
             class->methods->bodyInstr = constructorBody;    
         }
          
-       printf("Checking extends ddeclaration  \n");    
        if ( extendsCall != NULL ) {
             class->fields->next = NewSuper(class->extends->class, class->extends->args);
             class->fields->next->next = fieldDecl; 
@@ -48,9 +40,9 @@ Class ClassDeclComplete(MethodCall extendsCall,
             class->fields->next = fieldDecl ; 
        }
         
-       printf("Init scope for class  \n");
        ScopeInitForClass(class);
-   
+        
+       if ( verbose == TRUE )  
        ClassDefPrint(class);
       
        return class;         
@@ -99,7 +91,7 @@ void ClassPrint(Class c){
     while(field != NULL){
           printPadding(); 
           if ( field->value == NULL )  
-          printf("%s : %s Op = NULL \n", field->name,  field->class->name);
+          printf("%s :  %s Op = NULL \n", field->name,  field->class->name);
           else 
           printf("%s : %s Op = %d\n", field->name,  field->class->name, field->value->value.i);
           field = field->next;
@@ -404,7 +396,6 @@ void ClassDeclAssertIsOk(Class class) {
                     PrintError(message, m->lineno);
                     exit(1);
                 } else {
-                     printf("\n\t Checking signature for %s \n", m->name);
                     /* Une methode au meme nom qu'une autre dans une classe MERE est une erreur si :
                        Elles n'ont pas les mêmes parametres et type de retour ( car il s'agit d'une surchage et elles sont interdites  */
                     if ( MethodHasSameSignature(m,z) == FALSE ) {
@@ -617,12 +608,19 @@ void  ReplaceVarInExpr(Expr e, char* varName, Var v){
 
 void ClassTypeAndRedirect(Class class){
      char message[128];
-     printf("\n\nDans la class %s\n", class->name);  
+     
+     if ( verbose == TRUE ) {
+        printf("\n\nDans la class %s\n", class->name);  
+     }   
+
     
      /* Typer et rediriger les arguments de Extends : extends->args*/
      Expr e;
      Var v;
-     printf("\tTyper et rediriger les arguments de Extends\n");  
+     
+     if ( verbose == TRUE ) {
+         printf("\tTyper et rediriger les arguments de Extends\n");  
+     }
      if ( class->extends != NULL ) {
          Method method = GetMethod(class->extends->class, class->extends->methodName);
          if ( method == NULL ) {
@@ -656,13 +654,20 @@ void ClassTypeAndRedirect(Class class){
          /*On verifie que l'appel a exteds est bien correcte */
          AssertClassInstanciationIsOk(class->extends->class, class->extends->args, class->lineno);
     } else {
-     printf("\tAucune Close Extends ");      
-    
+        
+     if ( verbose == TRUE ) {
+        printf("\tAucune Close Extends ");      
+     }
     }
-    printf("\t[Finished !]\n");      
+     if ( verbose == TRUE ) {
+        printf("\n\t[Finished !]\n");   
+     }        
      
-   
-     printf("\tTyper et rediriger le corps du constructeur \n");  
+    
+     if ( verbose == TRUE ) {
+       printf("\tTyper et rediriger le corps du constructeur \n");  
+     }
+     
      /* Typer et rediriger le corps du constructeur */
      Method method = GetMethod(class, "constructor");
      
@@ -671,10 +676,15 @@ void ClassTypeAndRedirect(Class class){
          ReplaceVarInInstr(method->bodyInstr, sc);
          
      }
-     printf("\t[Finished !]\n");      
+     if ( verbose == TRUE ) {
+        printf("\n\t[Finished !]\n");   
+     }        
      
      /* Typer et rediriger les champs de la classe  */
-     printf("\tTyper et rediriger les champs de la classe   "); 
+     
+     if ( verbose == TRUE ) {
+        printf("\tTyper et rediriger les champs de la classe   "); 
+     }
      Var fields = class->fields;
      
      if ( fields != NULL ) 
@@ -688,13 +698,18 @@ void ClassTypeAndRedirect(Class class){
             ReplaceExprViaScope(e, sc);
             ExprAssertInheritsType(fields->class, fields->value);
          }
-         printf("\n\t%s : %s", fields->name, fields->class->name);      
          fields = fields->next;
-     } 
-      printf("\n\t[Finished !]\n"); 
-      
+     }
+     
+     if ( verbose == TRUE ) {
+        printf("\n\t[Finished !]\n");   
+     }   
+     
      /* Typer et rediriger le corps des methodes */
-     printf("\tTyper et rediriger le corps des methodes  "); 
+     if ( verbose == TRUE ) {
+        printf("\tTyper et rediriger le corps des methodes  "); 
+     }
+     
      if (  strcmp(class->name, "Integer") == 0
         || strcmp(class->name, "String")  == 0
         || strcmp(class->name, "Void")    == 0 ) 
@@ -702,9 +717,9 @@ void ClassTypeAndRedirect(Class class){
     
      method = class->methods->next;
      while ( method != NULL ) {
-          /* printf("\n\nMethod %s \n", method->name);
-          ScopePrint(method->scope);  */
-          printf("\n\t%s returns %s", method->name, method->returnClassName);      
+          if ( verbose == TRUE ) {
+               printf("\n\t%s returns %s", method->name, method->returnClassName);      
+          }
           if ( method->bodyExpr == NULL ) {
                 ReplaceVarInInstr(method->bodyInstr, method->scope);
                 if ( strcmp(method->returnClassName, method->bodyInstr->yield->type->name) != 0  ) {
@@ -729,7 +744,9 @@ void ClassTypeAndRedirect(Class class){
            
            method = method->next;
      }
-      printf("\n\t[Finished !]\n");       
+     if ( verbose == TRUE ) {
+        printf("\n\t[Finished !]\n");   
+     }    
 }
 
 

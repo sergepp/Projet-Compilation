@@ -47,6 +47,15 @@ typedef struct __Expr {
   bool isEvaluated;
   struct __Expr* left;                /* valeur si op = INSTANCE_METHOD_CALL   */
   int op;
+  
+  union {
+    char *s;                          /* valeur de la feuille si op = CONST_STR ou VAR_CALL ou SELECTION */
+    int i;                            /* valeur de la feuille si op = CONST_INT */
+    bool isVoid;                      /* valeur de la feuille si op = CONST_VOID */  
+    struct __Class* instance;         /* Valeur de la feuille si op = INSTANCE  --> ( instanciation )*/ 
+  } evalResult; 
+  
+  
   union {
     char *s;                          /* valeur de la feuille si op = CONST_STR ou VAR_CALL ou SELECTION */
     int i;                            /* valeur de la feuille si op = CONST_INT */
@@ -55,12 +64,7 @@ typedef struct __Expr {
     struct __MethodCall* m;           /* valeur de la feuille si op = INSTANCE_METHOD_CALL  STATIC_METHOD_CALL */
     Var v;                            /* valeur de la feuille si op = STATIC_FIELD_ACCESS  */  
   } value; 
-  union {
-    char *s;                          /* valeur de la feuille si op = CONST_STR ou VAR_CALL ou SELECTION */
-    int i;                            /* valeur de la feuille si op = CONST_INT */
-    bool isVoid;                      /* valeur de la feuille si op = CONST_VOID */  
-    struct __Class* instance;         /* Valeur de la feuille si op = INSTANCE  --> ( instanciation )*/ 
-  } evalResult; 
+  
   struct __Expr* right; 
   struct __Expr* next ; 
 } _Expr, *Expr;

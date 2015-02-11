@@ -1,7 +1,7 @@
 
 
 void VarPrint(Var v){
-    printf("Var     name:%s  class:%s  ", v->name, v->class->name );
+    printf("Var  name:%s  class:%s  ", v->name, v->class->name );
     
     if ( v->value == NULL ) 
         printf("expr:NULL  ");

@@ -70,38 +70,18 @@ int main(int argc, char **argv) {
   }   
                 
   /* Initialisations */
-  
   InitializationFinished = FALSE;
   CurrentMethodName = (char*) malloc(128 * sizeof(char));
 
   initIntegerClass();
-  printf("Class Integer initialized\n");
-  
   initStringClass();
-  printf("Class String initialized\n");
-  initVoidClass();
-  printf("Class Void initialized\n");
-
-  printf("\nInitializing scope\n");  
+  initVoidClass();  
+  
   initializeScope();
-  printf("Scope initialized\n");
-
   InitializationFinished = TRUE;
-  CurrentClass = NULL;
-  printf("\n Beginning Parsing\n");
-  
+  CurrentClass = NULL;  
   AllDefinedClasses = defaultClassDefsPlus(NULL);
-  /*
-  printf("Avant le debut du programme\n");
-  Class c = AllDefinedClasses;
-  while ( c != NULL ) {
-        printf("\t%s\n", c->name);
-        ScopePrint(c->scope);
-        printf("\n");
-      c = c->next;
-  }  
   
-  */
   /* redirige l'entree standard sur le fichier.   .. */
   close(0); dup(fi); close(fi);
 
@@ -129,8 +109,6 @@ int main(int argc, char **argv) {
     return res2;
   }
   
-  ScopePrint(MainScope);
-  printf("\n");
   ProgramTypeAndRedirect(program); 
   InstrTypeAndRedirect(program->instrs, MainScope);
   exec_instr(program->instrs, MainScope);

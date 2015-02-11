@@ -138,7 +138,6 @@ Class initIntegerClass() {
     integerName = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(integerName, "Integer");
     CurrentClass = ClassDecl(integerName, NULL);
     Integer = ClassDeclComplete(NULL, NULL, NULL, IntegerMethods());
-    ScopePrint(Integer->scope);
     exit ;
     return Integer;  
 }

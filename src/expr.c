@@ -288,8 +288,9 @@ void ExprPrint(Expr expr) {
         incPaddingNb();
         printPadding();
         switch(expr->op){
-            case CONST_INT  : printf("Const Integer %d \n", expr->value.i); break ; 
-            case CONST_STR  : printf("Const String  %s \n", expr->value.s); break ; 
+            case CONST_INT  : printf("Const Integer %d  \n", expr->evalResult.i); break ; 
+            case CONST_VOID : printf("void \n"); break ;             
+            case CONST_STR  : printf("Const String  %s \n", expr->evalResult.s); break ; 
             case ADD        : 
                                printf("left  : \n"); ExprPrint(expr->left); 
                 printPadding();printf("op    : + \n"); 
