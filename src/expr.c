@@ -135,7 +135,42 @@ void ExprAssertInstanciationIsOk(char* className, Expr e){
 }
 
 Expr ExprFromInstanciation(char* className, Expr e){
-    Expr expr = ClassNewInstanceOf(className, e);
+    Expr expr ;
+    char message[128];
+     
+    if ( strcmp(className, "Void") == 0 )  {
+        sprintf(message, "La classe Void n'est pas instanciable!");
+        PrintError(message, yylineno);
+        exit(1); 
+    }
+    
+    if ( strcmp(className, "Integer") == 0  )  {
+        if ( e == NULL || e->next != NULL ) {
+            sprintf(message, "Nombres d'arguments incorrectes pour l'instanciation de %s", className);
+            PrintError(message, yylineno);
+            exit(1);
+        }
+        if ( e->op != CONST_INT ) {
+            sprintf(message, "Impossibe d'instancier la classes prédefinies avec autre chose que des constantes Entieres!");
+            PrintError(message, yylineno);
+            exit(1);
+        }
+        return e; 
+    }
+    if ( strcmp(className, "String")  == 0 )  {
+        if ( e == NULL || e->next != NULL ) {
+            sprintf(message, "Nombres d'arguments incorrectes pour l'instanciation de %s", className);
+            PrintError(message, yylineno);
+            exit(1);
+        }
+        if (   e->op != CONST_STR  ) {
+            sprintf(message, "Impossibe d'instancier les classes prédefinies avec autre chose que des chaines de caracteres constantes!");
+            PrintError(message, yylineno);
+            exit(1);
+        } 
+        return e;
+    }
+    expr = ClassNewInstanceOf(className, e);
     return expr;
 }
 
@@ -239,7 +274,7 @@ Expr ExprFromString(char* string){
     expr->left = NULL; 
     expr->op = CONST_STR; 
     expr->value.s = string;
-    expr->evalResult.i = string;
+    expr->evalResult.s = string;
     expr->type = String; 
     expr->right = NULL;
     expr->isEvaluated = TRUE;
@@ -248,7 +283,6 @@ Expr ExprFromString(char* string){
 }
 Expr ExprFromVar(char* varName){
 
-    /*    printf("Dans la fonction ExprFromVar\n"); */
     Expr expr = NEW(1, _Expr);
     expr->op = VAR_CALL;
     expr->value.s = varName;

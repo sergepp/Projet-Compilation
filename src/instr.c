@@ -142,7 +142,6 @@ void InstrAssertAssignIsOk(Expr left, Expr right){
 
     /* Si l'expression de gauche n'est pas visible on a un probleme */
    
-    
     /* Si les types ne sont pas compatibles, on a un probleme : ATTENTION 
         ICI  right et left sont inversé car si on autorise : 
         Map  = HashMap

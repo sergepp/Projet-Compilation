@@ -766,6 +766,7 @@ void ReplaceVarInInstr(Instr instr, Scope sc){
         case ASSIGN     : 
             ReplaceExprViaScope(instr->leftExpr, sc);
             ReplaceExprViaScope(instr->rightExpr, sc); 
+             
             InstrAssertAssignIsOk(instr->leftExpr, instr->rightExpr);
             break;
         case FN_BLOC    :

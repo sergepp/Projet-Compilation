@@ -7,22 +7,26 @@ class A() is {
 
 
 class A2() extends A() is {
-  var v : String := "hello"; 	/* masque le champ v de la classe A */
-  def override f() returns Void { 
+  var v : String := ""; 	/* masque le champ v de la classe A */
+
+  def override toString() returns String := super.toString() & v
+  
+  def  f() returns Void { 
       "A2::f()\n".println();
       super.f();
       v := "Hello";
    }
-  def  toString() returns String := super.toString() & v
-  
+
 }
  
 
 { 
-  var monA : A := new A();
-  var monA2 : A2 := new A2();
+
+  var monA2 : A2 := new String("4");
   var i : Integer := 9;
+  var monA : A := new Integer(0);
   is
+  
   i := 9999 ; 
   ( 1 + i ).println();
   if ( 0 = 1 ) then 4.println(); else (-1).println(); 
@@ -40,5 +44,6 @@ class A2() extends A() is {
   monA2.g();
   monA2.toString().println(); 
   "\nDone !".println();
+  
 }
 

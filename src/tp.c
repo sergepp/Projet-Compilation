@@ -46,7 +46,7 @@ extern int yydebug;
 /* Niveau de 'verbosite'.
  * Par defaut, n'imprime que le resultat et les messages d'erreur
  */
-bool verbose = FALSE;
+bool verbose = TRUE;
 
 /* Evaluation ou pas. Par defaut, on evalue les expressions */
 bool noEval = FALSE;

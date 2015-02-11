@@ -218,6 +218,7 @@ Program program ;
 
 Program makeProgram(Class classDefs, Instr instrs);
 
+void ProgramTypeAndRedirect(Program program);
 
 Method IntegerInitMethod(char* methodName, char* returnClassName, Var params);
 
