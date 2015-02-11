@@ -50,17 +50,10 @@ typedef struct __Expr {
   union {
     char *s;                          /* valeur de la feuille si op = CONST_STR ou VAR_CALL ou SELECTION */
     int i;                            /* valeur de la feuille si op = CONST_INT */
-    bool isVoid;                      /* valeur de la feuille si op = CONST_VOID */  
     struct __Class* instance;         /* Valeur de la feuille si op = INSTANCE  --> ( instanciation )*/
     struct __MethodCall* m;           /* valeur de la feuille si op = INSTANCE_METHOD_CALL  STATIC_METHOD_CALL */
     Var v;                            /* valeur de la feuille si op = STATIC_FIELD_ACCESS  */  
   } value; 
-  union {
-    char *s;                          /* valeur de la feuille si op = CONST_STR ou VAR_CALL ou SELECTION */
-    int i;                            /* valeur de la feuille si op = CONST_INT */
-    bool isVoid;                      /* valeur de la feuille si op = CONST_VOID */  
-    struct __Class* instance;         /* Valeur de la feuille si op = INSTANCE  --> ( instanciation )*/ 
-  } evalResult; 
   struct __Expr* right; 
   struct __Expr* next ; 
 } _Expr, *Expr;
@@ -78,7 +71,7 @@ typedef struct __Instr {
     int op;
     Scope scope;
     
-    Expr expr;                  /* valeur de la feuille si op = EXPR ou op =RETURN*/
+    Expr expr;                  /* valeur de la feuille si op = EXPR */
     Expr yield;                 /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC ou INSTR_BLOC */
     Var var;                    /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC  */
     struct __Instr* listInstr;  /* valeur de la feuille si op = PROC_BLOC  ou FN_BLOC ou INSTR_BLOC */                   
@@ -115,7 +108,6 @@ typedef struct __MethodCall {
   struct __Class* class;
   Expr args;
   char* methodName;
-  Expr this;
 } _MethodCall, *MethodCall;
 
 
@@ -186,17 +178,6 @@ Class initStringClass() ;
 Class initVoidClass();
 
 Class initIntegerClass();
-
-
-
-Method printMethod();
-
-Method printlnMethod();
-
-Method toStringMethod();
-
-
-
 bool InitializationFinished;
 
 void incPaddingNb();
@@ -210,7 +191,6 @@ void ProgramPrint(Program prg);
 
 void ProgramEval(Program program);
 
-Program program ;
 
 Program makeProgram(Class classDefs, Instr instrs);
 

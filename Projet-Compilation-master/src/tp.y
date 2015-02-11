@@ -16,17 +16,22 @@
  *
  */
 %nonassoc RELOP
-%nonassoc ASSIGN
+%right ASSIGN
+%nonassoc NEW
 %left ADD SUB
 %left MUL DIV 
 %left UNARY
 %left CONCAT
-%left '.'
-%nonassoc NEW
 %nonassoc CONST_INT CONST_STR CONST_VOID
+%left '.'
 %left ID CLASS_TYPE
 %left '(' ')'
 %left '{' '}'
+%nonassoc IF RETURN
+%nonassoc ELSE /*
+%nonassoc THEN
+%nonassoc IF 
+%nonassoc RETURN*/
 
 /** 
  * Voir la definition de YYSTYPE dans main.h 
@@ -92,7 +97,7 @@ extern void yyerror();  /* definie dans tp.c */
 
 /* "program" est l'axiome de la grammaire */
 program : proceduralBloc         { $$ = makeProgram(NULL, $1); }
-    | L_classDecl proceduralBloc  { $$ = makeProgram($1, $2);   }
+    | L_classDecl proceduralBloc { $$ = makeProgram($1, $2);   }
 ; 
 L_classDecl : classDecl           { $$ = $1;    CurrentClass = NULL; }
     | L_classDecl classDecl       { $$ = ClassDeclSetNext($1, $2); } 
@@ -144,12 +149,12 @@ fieldDecl :  varDecl                                {  $$ = $1; }
 L_methodDecl : methodDecl      { $$ = $1; }
     | L_methodDecl methodDecl  { $$ = MethodDeclSetNext($1, $2); }
 ;
-methodDecl : DEF OVERRIDE ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE methodBody { $$ = OverrideMethodDecl($3, $5, $8, $9, NULL); }
-        |    DEF OVERRIDE ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE ASSIGN expr{ $$ = OverrideMethodDecl($3, $5, $8, NULL, $10);} 
-        |      DEF STATIC ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE methodBody { $$ = StaticMethodDecl($3, $5, $8, $9, NULL);}
-        |      DEF STATIC ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE ASSIGN expr{ $$ = StaticMethodDecl($3, $5, $8, NULL, $10);}
-        |             DEF ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE methodBody { $$ = MethodDecl($2, $4, $7, $8, NULL);}
-        |             DEF ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE ASSIGN expr{ $$ = MethodDecl($2, $4, $7, NULL, $9);}
+methodDecl : DEF OVERRIDE ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE methodBody { $$=OverrideMethodDecl($3, $5, $8, $9, NULL); }
+        |    DEF OVERRIDE ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE ASSIGN expr{ $$=OverrideMethodDecl($3, $5, $8, NULL, $10);} 
+        |      DEF STATIC ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE methodBody { $$=StaticMethodDecl($3, $5, $8, $9, NULL);}
+        |      DEF STATIC ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE ASSIGN expr{ $$=StaticMethodDecl($3, $5, $8, NULL, $10);}
+        |             DEF ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE methodBody { $$=MethodDecl($2, $4, $7, $8, NULL);}
+        |             DEF ID '(' Opt_L_methodParamDecl ')' RETURNS CLASS_TYPE ASSIGN expr{ $$=MethodDecl($2, $4, $7, NULL, $9);}
 ;
 
 Opt_L_methodParamDecl  :                            { $$ = NULL; }
@@ -188,9 +193,9 @@ instr :  expr ';'                       { $$ = InstrFromExpr($1);   }
     | proceduralBloc                    { $$ = $1; }
     | functionalBloc                    { $$ = $1; }
     | expr ASSIGN expr ';'              { $$ = InstrFromAssign($1, $3); }
-    | ifThenElseInstr                   { $$ = $1; }
+    | ifThenElseInstr  %prec UNARY      { $$ = $1; }
 ;
-ifThenElseInstr :  IF expr THEN instr ELSE instr              { $$ = InstrFromIf($2, $4, $6); } 
+ifThenElseInstr :  IF expr THEN L_instr ELSE L_instr { $$ = InstrFromIf($2, $4, $6); }
 ;
 Opt_L_expr :            { $$ = NULL; }
     | L_expr            { $$ = $1; }

@@ -26,6 +26,51 @@ Var StringFields() {
     return fields ;
 }
 
+/*
+
+
+Var VarDecl(char* name, char* className, Expr e) {
+
+    if (strcmp(name, "this") == 0 || strcmp(name, "super") == 0  ) {
+         char message[128];  
+         sprintf(message, "%s est un mot reserve et ne peut etre utiliser comme nom de variable ou de parametre\n", name);
+        PrintError(message, yylineno);
+        exit(1);
+    } 
+    Var v    = NEW(1, _Var);
+    v->name  = name;
+    v->lineno = yylineno;
+    v->class = GetClassByName(className);
+    v->value = e;
+    v->isStatic = FALSE;
+    return v;
+}
+
+
+
+Method MethodDecl(char* name, Var paramDecl, char* returnClassName, Instr bodyInstr, Expr bodyExpr){
+    Method method       = NEW(1, _Method);
+    method->name        = name; 
+    method->isOverride  = FALSE;
+    method->isStatic    = FALSE;
+    method->params      = paramDecl;
+    method->lineno      = yylineno;
+    AssertClassExists(returnClassName); 
+    AssertMethodAreNotDupliqued(method);
+    method->returnClassName = returnClassName;
+    
+    if ( bodyInstr == NULL )  {
+        method->bodyExpr = bodyExpr;    
+     }
+    else { 
+        method->bodyInstr = bodyInstr;  
+    }
+        
+    return method; 
+} 
+ 
+*/
+
 
 
 Method IntegerInitMethod(char* methodName, char* returnClassName, Var params) {
@@ -45,27 +90,7 @@ Method IntegerInitMethod(char* methodName, char* returnClassName, Var params) {
     return method;
 }
 
-
-
-/* Renvoi la liste de toutes les methodes disponibles sur l'objet Integer */
-Method IntegerMethods() {
-    Var param = VarDecl("arg0", "Integer", NULL);
-    Method 
-    IntegerMethods = IntegerInitMethod("+", "Integer", param); 
-    IntegerMethods->next  =  IntegerInitMethod("-", "Integer", param);
-    IntegerMethods->next->next  = IntegerInitMethod("/", "Integer", param);
-    IntegerMethods->next->next->next  = IntegerInitMethod("*", "Integer", param);
-    IntegerMethods->next->next->next->next  = printMethod();
-    IntegerMethods->next->next->next->next->next  = printlnMethod();
-    IntegerMethods->next->next->next->next->next->next  = toStringMethod();
-    
-    
-    return IntegerMethods;
-}
-
-
-
-Method printMethod(){
+Method IntegerPrintMethod(){
 
     Method method       = NEW(1, _Method);
     method->name        = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->name, "print"); 
@@ -76,7 +101,57 @@ Method printMethod(){
     method->returnClassName = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->returnClassName, "Void");  
     return method;  
 }
-Method printlnMethod(){
+Method IntegerPrintlnMethod(){
+    Method method       = NEW(1, _Method);
+    method->name        = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->name, "println"); 
+    method->isOverride  = FALSE;
+    method->isStatic    = FALSE;
+    method->params      = NULL;
+    method->lineno      = -1;   
+    method->returnClassName = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->returnClassName, "Void");    
+    return method;
+}
+Method IntegerToStringMethod(){
+    Method method       = NEW(1, _Method);
+    method->name        =   (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->name, "toString"); 
+    method->isOverride  = FALSE;
+    method->isStatic    = FALSE;
+    method->params      = NULL;
+    method->lineno      = -1;   
+    method->returnClassName = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->returnClassName, "String");   
+    return method; 
+}
+
+/* Renvoi la liste de toutes les methodes disponibles sur l'objet Integer */
+Method IntegerMethods() {
+    Var param = VarDecl("arg0", "Integer", NULL);
+    Method 
+    IntegerMethods = IntegerInitMethod("+", "Integer", param); 
+    IntegerMethods->next  =  IntegerInitMethod("-", "Integer", param);
+    IntegerMethods->next->next  = IntegerInitMethod("/", "Integer", param);
+    IntegerMethods->next->next->next  = IntegerInitMethod("*", "Integer", param);
+    IntegerMethods->next->next->next->next  = IntegerPrintMethod();
+    IntegerMethods->next->next->next->next->next  = IntegerPrintlnMethod();
+    IntegerMethods->next->next->next->next->next->next  = IntegerToStringMethod();
+    
+    
+    return IntegerMethods;
+}
+
+
+
+Method StringPrintMethod(){
+
+    Method method       = NEW(1, _Method);
+    method->name        = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->name, "print"); 
+    method->isOverride  = FALSE;
+    method->isStatic    = FALSE;
+    method->params      = NULL;
+    method->lineno      = -1;   
+    method->returnClassName = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->returnClassName, "Void");  
+    return method;  
+}
+Method StringPrintlnMethod(){
     Method method       = NEW(1, _Method);
     method->name        = (char*) malloc(ID_NAME_MAX_SIZE * sizeof(char)); sprintf(method->name, "println"); 
     method->isOverride  = FALSE;
@@ -102,8 +177,8 @@ Method toStringMethod(){
 /* Renvoi la liste de toutes les methodes disponibles sur l'objet String */
 Method StringMethods() {
     Method 
-    StringMethods = printMethod();
-    StringMethods->next = printlnMethod();
+    StringMethods = StringPrintMethod();
+    StringMethods->next = StringPrintlnMethod();
     StringMethods->next->next = toStringMethod();
     return StringMethods;
 }
@@ -142,16 +217,62 @@ Class initIntegerClass() {
     exit ;
     return Integer;  
 }
- 
+
+/**
+Class ClassDecl(char*   className, Var classParamDecl) {
+    
+    Class class =  NEW(1, _Class);
+    class->name       = className;
+    class->fields   = NewThis(class, NULL);
+    ClassRegisterInScope(class);
+    class->lineno = yylineno;
+    class->methods  = ClassInitConstructor(class, classParamDecl, NULL);    
+
+       
+    return class;
+}
+
+Class ClassDeclComplete(MethodCall extendsCall, 
+                Instr     constructorBody, 
+                Var       fieldDecl, 
+                Method    methodDecl){
+       Class class = CurrentClass; 
+       class->extends    = extendsCall;         
+
+       class->scope = ScopeNew(class->name, NULL, NULL,  class->fields);
+       class->scope->method = methodDecl ;
+             
+       if ( extendsCall != NULL ) {
+            class->fields->next = NewSuper(class->extends->class, NULL);
+            class->fields->next->next = fieldDecl; 
+            class->scope->next =   class->extends->class->scope;
+       } else {
+            class->fields->next = fieldDecl ; 
+       }
+
+       class->methods->bodyInstr = constructorBody;        
+       class->methods->next = methodDecl;        
+       ScopeInitForClass(class); 
+       ClassDefPrint(class);
+       return class;         
+}
+
+
+
+
+
+
+
+*/
  
 
 void incPaddingNb(){
-    PrintPaddingNb+= 6;
+    PrintPaddingNb+= 4;
 }
 
 
 void decPaddingNb(){
-    PrintPaddingNb-= 6;
+    PrintPaddingNb-= 4;
 }
 
 
@@ -188,26 +309,24 @@ void ProgramEval(Program program){
 }
 
 void ProgramTypeAndRedirect(Program program){
-    Class cl = program->classDefs; 
+    Class cl = AllDefinedClasses; 
     while ( cl != NULL ) {
         ClassTypeAndRedirect(cl);
         cl = cl->next;
     }
+    /* InstrTypeAndRedirect(program->instrs); */
 }
 
-void InstrTypeAndRedirect(Instr instrs, Scope sc){
-    Instr i = instrs;
-    while( i != NULL ) {
-        ReplaceVarInInstr(i, sc);
-        i = i->next;
-    }
-}
 
 Program makeProgram(Class classDefs, Instr instrs){
-    program = NEW(1, _Program);
+    Program program = NEW(1, _Program);
     program->classDefs = AllDefinedClasses;
     program->instrs = instrs;
-   
+    /* ProgramPrint(program); */
+    printf("\n");
+    /* ScopePrint(MainScope); */
+    ProgramTypeAndRedirect(program);
+    /* ProgramEval(program); */
     return program;
 }
 

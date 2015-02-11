@@ -31,7 +31,6 @@ extern char *strdup(const char *);
 #include "expr.h"
 #include "var.h"
 #include "class.h"
-#include "exec.h"
 
 
 
@@ -123,18 +122,12 @@ int main(int argc, char **argv) {
   res = yyparse();    
 
   if (fd != NIL(FILE)) fclose(fd);
-  if ( !(res == 0 && errorCode == NO_ERROR) )  {
+  if (res == 0 && errorCode == NO_ERROR) return 0;
+  else {
     int res2 = res ? SYNTAX_ERROR : errorCode;
     printf("Error in file. Kind of error: %d\n", res2); 
     return res2;
   }
-  
-  ScopePrint(MainScope);
-  printf("\n");
-  ProgramTypeAndRedirect(program); 
-  InstrTypeAndRedirect(program->instrs, MainScope);
-  exec_instr(program->instrs, MainScope);
-  
 }
 
 
@@ -159,6 +152,5 @@ void yyerror(char *ignore) {
 #include "instr.c"
 #include "scope.c"
 #include "class.c"
-#include "exec.c"
 
 

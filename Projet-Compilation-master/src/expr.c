@@ -216,8 +216,6 @@ Expr ExprFromVoid(){
     expr->op = CONST_VOID;
     expr->type = Void; 
     expr->isEvaluated = TRUE;
-    expr->value.isVoid = TRUE;
-    expr->evalResult.isVoid = TRUE;
     expr->lineno = yylineno;
     return expr;
 }
@@ -226,7 +224,6 @@ Expr ExprFromInt(int value) {
     Expr expr = NEW(1, _Expr);
     expr->op = CONST_INT; 
     expr->value.i = value;
-    expr->evalResult.i = value;
     expr->type = Integer; 
     expr->isEvaluated = TRUE;
     expr->lineno = yylineno;  
@@ -238,8 +235,7 @@ Expr ExprFromString(char* string){
     Expr expr = NEW(1, _Expr);
     expr->left = NULL; 
     expr->op = CONST_STR; 
-    expr->value.s = string;
-    expr->evalResult.i = string;
+    expr->value.s = strdup(string);
     expr->type = String; 
     expr->right = NULL;
     expr->isEvaluated = TRUE;
@@ -302,14 +298,11 @@ void ExprPrint(Expr expr) {
                                printf("left  : \n"); ExprPrint(expr->left); 
                 printPadding();printf("op    : X \n"); 
                 printPadding();printf("right : \n"); ExprPrint(expr->right);break ; 
-            case VAR_CALL   : printf("Variable : %s\n",expr->value.s);  break;
+            case VAR_CALL   : printf("Variable : %s\n",expr->value.s);  
             case INSTANCE_METHOD_CALL :   printf("left  : \n"); ExprPrint(expr->left); 
                 printPadding();printf("value.m->methodName    :  %s\n", expr->value.m->methodName);
                 break;
             case INSTANCE :    printf("instance of : %s\n", expr->value.instance->name); break;
-            case CONCAT   :    printf("left  : \n"); ExprPrint(expr->left); 
-                printPadding();printf("op    : &\n"); 
-                printPadding();printf("right : \n"); ExprPrint(expr->right);        
                 break; 
             default : printf("Format d'affichage non reconnu \n "); break;     
         }
@@ -398,6 +391,10 @@ Expr ExprEval(Expr expr) {
             return e ; 
         case CONCAT     : 
              e = ExprConcatEval(expr);    
+             e->isEvaluated = TRUE;
+             return e ;
+        case VAR_CALL   : 
+             e = ExprVarEval(expr);
              e->isEvaluated = TRUE;
              return e ;
         default : printf("Evaluation Non encore implementée \n "); break;     

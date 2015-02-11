@@ -65,7 +65,11 @@ void AssertVarAreNotDupliqued(Var var){
 
     if ( var == NULL || var->next == NULL ) 
         return; 
-     
+    
+    if (  strcmp(var->class->name, "Integer")  == 0
+        || strcmp(var->class->name, "String")   == 0
+        || strcmp(var->class->name, "Void")     == 0 )  
+        return ; 
         
     char message[128];
     Var i = var; 
@@ -78,7 +82,6 @@ void AssertVarAreNotDupliqued(Var var){
         }
         j = i->next;
         while ( j != NULL ) {
-            
             if ( strcmp(i->name, j->name) == 0 ) { 
                 sprintf(message, "Le nom de variable  %s a deja été utilise dans les parametres", j->name);
                 PrintError(message, j->lineno);
@@ -86,9 +89,9 @@ void AssertVarAreNotDupliqued(Var var){
             }
             j = j->next;
         }
+        
         i = i->next;            
     }
-    
 }
 
 void AssertAbstractVarDeclIsOk(char* name, char* classname) {

@@ -22,7 +22,7 @@ void ScopeInitForClass(Class class){
         /* Parametres de methodes */                
         char paramScopeName[128];
         sprintf(paramScopeName, "%s.params", class->name);
-        Scope paramScope = ScopeNew(paramScopeName, NULL, NULL, m->params);
+        Scope paramScope = ScopeNew(paramScopeName, localVar, NULL, m->params);
         localVar->next = paramScope;
         
         /* Champ de la classe */
@@ -31,7 +31,6 @@ void ScopeInitForClass(Class class){
         m->scope = localVar;
         m = m->next;        
     } 
-     
 }
 
 void ScopeInitForMethod(Class class, Method method){

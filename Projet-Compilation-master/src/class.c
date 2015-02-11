@@ -41,7 +41,7 @@ Class ClassDeclComplete(MethodCall extendsCall,
          
        printf("Checking extends ddeclaration  \n");    
        if ( extendsCall != NULL ) {
-            class->fields->next = NewSuper(class->extends->class, class->extends->args);
+            class->fields->next = NewSuper(class->extends->class, NULL);
             class->fields->next->next = fieldDecl; 
             class->scope->next =   class->extends->class->scope;
        } else {
@@ -52,7 +52,6 @@ Class ClassDeclComplete(MethodCall extendsCall,
        ScopeInitForClass(class);
    
        ClassDefPrint(class);
-      
        return class;         
 }
 
@@ -69,16 +68,14 @@ Var NewThis(Class class, Expr e){
     return v;
 }
 
-
-Var NewSuper(Class superClass, Expr superConstructorArgs){
- 
+Var NewSuper(Class class, Expr e){ 
     Var v = NEW(1, _Var);
     char* varname;
     varname = (char*) malloc(12 * sizeof(char));
     sprintf(varname, "super");
     v->name = varname;
-    v->class = superClass;
-    v->value  = ExprFromInstanciation(superClass->name, superConstructorArgs);
+    v->class = class;
+    v->value  = e;
     v->lineno = yylineno;
     
     return v;
@@ -133,14 +130,14 @@ Method MethodDecl(char* name, Var paramDecl, char* returnClassName, Instr bodyIn
     }
     
     
-    method->returnClassName = returnClassName; 
+    method->returnClassName = returnClassName;
+    
     if ( bodyInstr == NULL )  {
         method->bodyExpr = bodyExpr;    
      }
     else { 
         method->bodyInstr = bodyInstr;  
-    }
-    
+    }  
     return method; 
 } 
  
@@ -303,18 +300,7 @@ void AssertMethodAreNotDupliqued(Method method){
             j = j->next;
         }
         
-        if ( method->bodyInstr != NULL ) {
-            j = method->bodyInstr->var;
-            while ( j != NULL ) {
-                if ( strcmp(i->name, j->name) == 0 ) { 
-                    sprintf(message, "Le nom de variable  %s a deja été déclarée dans les parametres", j->name);
-                    PrintError(message, j->lineno);
-                    exit(1);
-                }
-                j = j->next;
-            }
-        }
-        i = i->next;
+        i = i->next;            
     }
    
 }
@@ -328,12 +314,8 @@ bool MethodHasSameSignature(Method m1, Method m2){
     if ( strcmp(m1->name, m2->name) != 0 )
         return FALSE;
     
-    if ( strcmp(m1->returnClassName, m2->returnClassName) != 0 ) 
-        return FALSE;  
-        
     Var p1 = m1->params;
     Var p2 = m2->params;
-    
     if ( (p1 != NULL && p2 == NULL) || (p1 == NULL && p2 != NULL) ) 
         return FALSE;
         
@@ -346,7 +328,9 @@ bool MethodHasSameSignature(Method m1, Method m2){
         if ( (p1 != NULL && p2 == NULL) || (p1 == NULL && p2 != NULL) ) 
             return FALSE;
     }
-        
+    
+    if ( strcmp(m1->returnClassName, m2->returnClassName) != 0 ) 
+        return FALSE;      
     
     return TRUE;
 }
@@ -363,7 +347,6 @@ bool IsMethodOverrideSomething(Method method, Class class){
     while ( m != NULL ) {
         if ( MethodHasSameSignature(m, method) == TRUE )
             return TRUE; 
-            
         m = m->next;
     } 
     
@@ -379,9 +362,6 @@ bool IsMethodOverrideSomething(Method method, Class class){
 void ClassDeclAssertIsOk(Class class) {
     char message[128];
 
-     if ( class->methods == NULL ) 
-        return;
-         
      Method m = class->methods->next; /* On saute le constructeur */ 
      Method z;
      Class current = class;
@@ -396,7 +376,7 @@ void ClassDeclAssertIsOk(Class class) {
             PrintError(message, m->lineno);
             exit(1);
         }             
-        while ( z != NULL ) {  
+        while ( z != NULL ) {    
             if ( strcmp(m->name, z->name) == 0 ) {
                             
                 if ( onCurrentClass == TRUE ) {
@@ -404,7 +384,6 @@ void ClassDeclAssertIsOk(Class class) {
                     PrintError(message, m->lineno);
                     exit(1);
                 } else {
-                     printf("\n\t Checking signature for %s \n", m->name);
                     /* Une methode au meme nom qu'une autre dans une classe MERE est une erreur si :
                        Elles n'ont pas les mêmes parametres et type de retour ( car il s'agit d'une surchage et elles sont interdites  */
                     if ( MethodHasSameSignature(m,z) == FALSE ) {
@@ -426,10 +405,10 @@ void ClassDeclAssertIsOk(Class class) {
             if ( z == NULL ) {
                 if ( current->extends != NULL ) {
                     current = current->extends->class;
-                    onCurrentClass = FALSE ;
                     if ( current != NULL ) {
                         z = current->methods->next; /* On saute le constructeur */
                      }
+                    onCurrentClass = FALSE ;
                 }
             }
         }        
@@ -516,6 +495,7 @@ Var ClassGetFieldByName(Class class, char* fieldName){
     return field;
 }
 
+
 Expr ClassNewInstanceOf(char* className, Expr args) {
      
     Class instance = NEW(1, _Class);
@@ -552,7 +532,7 @@ Expr ClassNewInstanceOf(char* className, Expr args) {
     } 
     */
     expr->op = INSTANCE;
-    expr->type = instance;
+    expr->type = class;
     expr->lineno = yylineno;
     expr->isEvaluated = TRUE;
     
@@ -617,12 +597,11 @@ void  ReplaceVarInExpr(Expr e, char* varName, Var v){
 
 void ClassTypeAndRedirect(Class class){
      char message[128];
-     printf("\n\nDans la class %s\n", class->name);  
-    
+     printf("\n\nDans la class %s\n", class->name);      
      /* Typer et rediriger les arguments de Extends : extends->args*/
      Expr e;
      Var v;
-     printf("\tTyper et rediriger les arguments de Extends\n");  
+              printf("\tTyper et rediriger les arguments de Extends ");  
      if ( class->extends != NULL ) {
          Method method = GetMethod(class->extends->class, class->extends->methodName);
          if ( method == NULL ) {
@@ -662,7 +641,7 @@ void ClassTypeAndRedirect(Class class){
     printf("\t[Finished !]\n");      
      
    
-     printf("\tTyper et rediriger le corps du constructeur \n");  
+     printf("\tTyper et rediriger le corps du constructeur ");  
      /* Typer et rediriger le corps du constructeur */
      Method method = GetMethod(class, "constructor");
      
@@ -682,16 +661,14 @@ void ClassTypeAndRedirect(Class class){
 
      Scope sc = ScopeNew("Class", NULL,  NULL, class->fields);
      while( fields != NULL  ) {
-         
          e = fields->value;
          if ( e != NULL ) {    
             ReplaceExprViaScope(e, sc);
             ExprAssertInheritsType(fields->class, fields->value);
-         }
-         printf("\n\t%s : %s", fields->name, fields->class->name);      
+         }     
          fields = fields->next;
      } 
-      printf("\n\t[Finished !]\n"); 
+      printf("\t[Finished !]\n"); 
       
      /* Typer et rediriger le corps des methodes */
      printf("\tTyper et rediriger le corps des methodes  "); 
@@ -702,11 +679,10 @@ void ClassTypeAndRedirect(Class class){
     
      method = class->methods->next;
      while ( method != NULL ) {
-          /* printf("\n\nMethod %s \n", method->name);
-          ScopePrint(method->scope);  */
-          printf("\n\t%s returns %s", method->name, method->returnClassName);      
+          printf("Method %s \n", method->name);
           if ( method->bodyExpr == NULL ) {
                 ReplaceVarInInstr(method->bodyInstr, method->scope);
+                
                 if ( strcmp(method->returnClassName, method->bodyInstr->yield->type->name) != 0  ) {
                     sprintf(message, "Dans la methode %s Le type de retour declaree n'est pas compatible avec le bloc (%s) := (%s)", 
                                      method->name, 
@@ -729,7 +705,10 @@ void ClassTypeAndRedirect(Class class){
            
            method = method->next;
      }
-      printf("\n\t[Finished !]\n");       
+      printf("\t[Finished !]\n"); 
+     
+     
+       
 }
 
 
@@ -789,8 +768,7 @@ void ReplaceVarInInstr(Instr instr, Scope sc){
    
 void ReplaceExprViaScope(Expr expr, Scope scope){
     
-    
-    if ( expr == NULL )  
+    if ( expr == NULL ) 
         return ;
       
     bool declared = FALSE; 
@@ -817,16 +795,12 @@ void ReplaceExprViaScope(Expr expr, Scope scope){
             if ( scope == NULL ) break;
             ReplaceExprViaScope(expr->left, scope);
             ReplaceExprViaScope(expr->right, scope); 
-            if (expr->op == CONCAT ) {
-                ExprAssertInheritsType(String, expr->left); 
-                ExprAssertInheritsType(String, expr->right);
-            }
-            else {
-                ExprAssertInheritsType(Integer, expr->left); 
-                ExprAssertInheritsType(Integer, expr->right);
-            }
-            break; 
-        
+            break ; 
+        case SELECTION      :
+            sprintf(message, "CETTE CONDITION NE DOIT PLUS JAMAIS ETRE SATISFAITE \n");
+                PrintError(message, expr->lineno);
+                exit(1);
+            break ;
         case STATIC_FIELD_ACCESS  : 
             
              if ( scope == NULL ) break;
@@ -858,7 +832,7 @@ void ReplaceExprViaScope(Expr expr, Scope scope){
              /* La variable a t elle ete declaree dans le scope ?  */
              
              if ( scope == NULL ) break;
-             
+
              v  = FindInstanceVarInScope(expr->value.s, scope);
 
              if (  v == NULL ) {   
@@ -877,7 +851,7 @@ void ReplaceExprViaScope(Expr expr, Scope scope){
              
              m = FindInstanceMethodInScope(expr->value.m->methodName, expr->left->type->scope);
              if ( m == NULL ) { 
-                ScopePrint(scope);
+                ExprPrint(expr->left);
                 sprintf(message, "Methode d'instance \"%s\" inconnue dans la classe %s ( Est-elle definie ? Est-elle static ? )  ",  expr->value.m->methodName,  expr->left->type->name);
                 PrintError(message, expr->lineno);
                 exit(1);

@@ -60,7 +60,6 @@ Method OverrideMethodDecl(char* name, Var paramDecl, char* classType, Instr meth
 Method StaticMethodDecl(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr);
 
  
-void MethodPrintHeader(Method m);
 
 Method MethodDecl(char* name, Var paramDecl, char* classType, Instr methodBody, Expr expr);  
  
@@ -76,7 +75,7 @@ void AssertClassLeftInheritsRight(Class left, Class right);
 
 void AssertClassInstanciationIsOk(Class class , Expr expr, int lineno);
 
-Var NewSuper(Class superClass, Expr superConstructorArgs);
+Var NewSuper(Class class, Expr e);
 
 Expr ClassNewInstanceOf(char* className, Expr expr);
 

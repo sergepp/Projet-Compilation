@@ -3,7 +3,6 @@ void AssertInstrAssignIsOk(Instr instr);
 
 Expr InstrGetReturnExpr(Instr listInstr);
 
-void InstrTypeAndRedirect(Instr instrs, Scope sc);
 
 bool InstrHasReturn(Instr instr);
 
