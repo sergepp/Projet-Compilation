@@ -30,7 +30,7 @@
 
 # Temp file generated for tests
 test/tmp/*.*
-Makefile
+
 #Flex and bison temp files
 test/*~
 test/*.out
