@@ -114,8 +114,8 @@ void AssertVarDeclIsOk(char* varName, char* classname, Expr e) {
 Var VarDecl(char* name, char* className, Expr e) {
 
     if (strcmp(name, "this") == 0 || strcmp(name, "super") == 0 || strcmp(name, "void") == 0  ) {
-         char message[128];  
-         sprintf(message, "%s est un mot reserve et ne peut etre utilise comme nom de variable ou de parametre\n", name);
+        char message[128];  
+        sprintf(message, "%s est un mot reserve et ne peut etre utilise comme nom de variable ou de parametre\n", name);
         PrintError(message, yylineno);
         exit(1);
     } 
@@ -123,7 +123,7 @@ Var VarDecl(char* name, char* className, Expr e) {
     v->name  = name;
     v->lineno = yylineno;
     v->class = GetClassByName(className);
-    v->value = e;
+    v->value = e; 
     v->isStatic = FALSE;
     return v;
 }

@@ -93,7 +93,7 @@ void ClassPrint(Class c){
           if ( field->value == NULL )  
           printf("%s :  %s Op = NULL \n", field->name,  field->class->name);
           else 
-          printf("%s : %s Op = %d\n", field->name,  field->class->name, field->value->value.i);
+          printf("%s : %s Op = %d\n", field->name,  field->class->name, field->value->evalResult.i);
           field = field->next;
     }
     incPaddingNb();
@@ -686,7 +686,7 @@ void ClassTypeAndRedirect(Class class){
         printf("\tTyper et rediriger les champs de la classe   "); 
      }
      Var fields = class->fields;
-     
+     Var c;
      if ( fields != NULL ) 
         fields = fields->next; /* On saute le premier fields qui est this */
 
@@ -698,8 +698,16 @@ void ClassTypeAndRedirect(Class class){
             ReplaceExprViaScope(e, sc);
             ExprAssertInheritsType(fields->class, fields->value);
          }
-         fields = fields->next;
+          /* Le nom de la variable ne doit pas deja avoir ete utilise dans le scope actuel 
+         c = GetVarByName(fields->name, sc);
+         if ( c != NULL ){ 
+            sprintf(message, "Variable %s deja definie dans le scope actuel", fields->name);
+            PrintError(message, e->lineno);
+            exit(1);
+          } */
+        fields = fields->next;
      }
+     
      
      if ( verbose == TRUE ) {
         printf("\n\t[Finished !]\n");   

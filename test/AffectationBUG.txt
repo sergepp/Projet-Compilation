@@ -1,0 +1,20 @@
+
+class A(xc:Integer) {
+    this.v = xc; 
+} is {
+    v: Integer := 8 
+}
+
+class A2(xc:Integer, ns:String) extends A(xc) is {
+    def  f(v:Integer) returns Void := void  /* La methode f de la classe A2 doit avoir le mot cle override : Elle est deja definie dnas la classe A */
+    def  g(v:Integer) returns Void := void  /* La methode g de la classe A2 doit avoir le mot cle override : Elle est deja definie dnas la classe A */
+   /* BUG : La validation ne se fait pas pour la derniere methode g. CAD que si on corrige l'erreur 
+            pour la methode f() en ajoutant le mot cle override, alors g n'est plus verifié et ne declenche plus d'erreur */
+}
+{
+    var a: A := new A(3);
+    is 
+    a.v.println();
+}
+
+

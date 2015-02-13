@@ -1,0 +1,24 @@
+
+class A() is {
+    def f(v:Integer) returns Void := void
+    def g(v:Integer) returns Void := void    
+}
+
+class A2() extends A() is {
+    def  f(v:Integer) returns Void := void  /* La methode f de la classe A2 doit avoir le mot cle override : Elle est deja definie dnas la classe A */
+    def  g(v:Integer) returns Void := void  /* La methode g de la classe A2 doit avoir le mot cle override : Elle est deja definie dnas la classe A */
+   /* BUG : La validation ne se fait pas pour la derniere methode g. CAD que si on corrige l'erreur 
+            pour la methode f() en ajoutant le mot cle override, alors g n'est plus verifié et ne declenche plus d'erreur */
+}
+
+/* Mis à part ce probleme, toutes les verifications relatives a la redefinition de methodes fonctionnent */
+class A3() extends A2() is{
+    def override f() returns Void := void /* KO : cette methode n'a pas la meme signature que la methode f() qu'elle est censée override */
+    def override f(b:Integer) returns String := "void" /* KO : cette methode n'a pas le meme type de retouur que la methode f() qu'elle est censée override */
+    def override f(t:Integer, b:String) returns Void := void /* KO : cette methode n'a pas le meme nombre de parametre que la methode f() qu'elle est censée override */
+    
+    def override h(b:Integer) returns String := "void" /* KO : cette methode n'override rien du tout */
+}
+{}
+
+

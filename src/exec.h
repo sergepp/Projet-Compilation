@@ -1,7 +1,7 @@
 Expr exec_instr(Instr i, Scope scope);
 
 
-Var method_arg_to_var_list(Method m, Expr args);
+Var method_arg_to_var_list(Method m, Expr args, Scope scope);
 
 Expr exec_eval_method_call(Expr e, Scope sc);
     

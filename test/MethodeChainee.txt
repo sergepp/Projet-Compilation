@@ -1,0 +1,32 @@
+
+class Point(xc:Integer, yc:Integer) {
+    this.xc = xc; 
+    this.yc = yc;
+} is {
+    var xc:Integer := 1;
+    var yc:Integer := 9;
+    
+    def static centre() returns Point := new Point(0,0)
+    def moveTo(newPoint:Point) returns Point {
+        this.xc := newPoint.xc;
+        this.yc := newPoint.yc;
+        return this;
+    }
+    def randomize() returns Point {
+        this.xc := 9 ;/* on suppose que 9 est une valeur aleatoire  */
+        this.yc := 9 ;/* on suppose que 9 est une valeur aleatoire  */
+        return this;
+    }
+    def getXC() returns Integer := this.xc
+    def getYC() returns Integer := this.yc     
+}
+
+/* Chainage des methodes */
+{
+    var point:Point := new Point(2, 3);
+    is
+    
+    point.moveTo(new Point(5,6).randomize()).getXC().println();    
+}
+
+

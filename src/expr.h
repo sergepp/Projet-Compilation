@@ -3,11 +3,11 @@ void ExprAssertFieldAccessIsOk(Expr e1, char* name);
 
 Expr ExprFromFieldAccess (Expr e1,char* name);
 
-void ExprAssertStaticFieldAccessIsOk(char* classname, char* name);
+ 
 
 Expr ExprFromStaticFieldAccess(char* classname, char* name);
 
-void ExprAssertStaticMethodAccessIsOk(char* classname, char* name, Expr e5);
+ 
 
 void ExprAssertIDIsOk(char* name) ;
 

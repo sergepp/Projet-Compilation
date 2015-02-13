@@ -96,10 +96,11 @@ Expr exec_instr(Instr instr, Scope scope){
                 if ( verbose == TRUE ) {
                     printPadding(); printf("Instr If\n"); 
                     incPaddingNb();
-                }            
-             
+                }       
+                    
                 result = exec_expr(i->cond, scope);
-                if( result->evalResult.i == 0 ) {
+                
+                if( result->evalResult.i != 0 ) { /* Vrai si NON NULL */
                     result = exec_instr(i->thenInstr, scope) ;  
                 }
                 else{
@@ -166,7 +167,7 @@ Expr exec_expr(Expr e, Scope scope){
                 }
                 
                 m = FindStaticMethodInScope(e->value.m->methodName, e->value.m->class->scope);
-                v->next = method_arg_to_var_list(m,  e->value.m->args);
+                v->next = method_arg_to_var_list(m,  e->value.m->args, scope);
                 sc = ScopeNew("", NULL, NULL, v);
                 sc->next = scope;
                 result = exec_instr(m->bodyInstr, sc);
@@ -229,7 +230,8 @@ Expr exec_expr(Expr e, Scope scope){
             case LT  : 
             case LTE : 
             case GTE : 
-            case GT  :  
+            case GT  : 
+                
                 result = exec_boolean_expr(e,scope);
                 
                 break ; 
@@ -300,13 +302,15 @@ Expr exec_eval_method_call(Expr e, Scope scope){
     else if ( strcmp(e->value.m->methodName, "toString") == 0 && strcmp(result->type->name, "String")  == 0  ) {
          result = ExprFromString(result->evalResult.s);
     }
-    else {
-        
+    else { 
         m = FindInstanceMethodInScope(e->value.m->methodName, e->left->type->scope);
         v = NewThis(e->left->type, e->left);
-        v->next = method_arg_to_var_list(m,  e->value.m->args);
+        v->next = method_arg_to_var_list(m,  e->value.m->args, scope);
+        
         sc = ScopeNew("Arguments de la methode", NULL, NULL, v);
+        
         sc->next =  e->left->type->scope;
+        
         if ( m->bodyExpr != NULL ) { 
             result = exec_expr(m->bodyExpr, sc);
         }
@@ -319,18 +323,22 @@ Expr exec_eval_method_call(Expr e, Scope scope){
 
 
 Expr exec_assign_right_to_left(Expr left, Expr right) {
-    
-
+ 
+    return right; 
     if( right->op == CONST_INT ){
         left->evalResult.i =  right->evalResult.i;
+        left->op = CONST_INT; 
     }
     else if( right->op == CONST_STR){
        left->evalResult.s =  right->evalResult.s;
+        left->op = CONST_STR; 
     }
     else if( right->op == CONST_VOID ){
        left->evalResult.isVoid =  TRUE;
+        left->op = CONST_VOID; 
     }
     else if( right->op == INSTANCE ){
+         left->op = INSTANCE;
         left->evalResult.instance =  right->evalResult.instance;
     }
     else {
@@ -340,7 +348,7 @@ Expr exec_assign_right_to_left(Expr left, Expr right) {
     return left; 
 }
 
-Var method_arg_to_var_list(Method m, Expr args){
+Var method_arg_to_var_list(Method m, Expr args, Scope scope){
     if ( m == NULL || m->params == NULL ) 
         return NULL;
         
@@ -348,10 +356,10 @@ Var method_arg_to_var_list(Method m, Expr args){
     i = m->params;
     Expr j = args;
 
-    result = VarDecl(i->name, i->class->name, j);
+    result = VarDecl(i->name, i->class->name, exec_expr(j, scope));
     k = result;
     while ( i->next != NULL ) {
-        k->next = VarDecl(i->name, i->class->name, j);
+        k->next = VarDecl( i->name, i->class->name, exec_expr(j, scope) );
         k = k->next;
         j = j->next;
         i = i->next;
@@ -363,14 +371,22 @@ Expr exec_arithm_expr(Expr expr, Scope scope) {
     Expr rightTmp, leftTmp;
     leftTmp  =  exec_expr(expr->left, scope); 
     rightTmp =  exec_expr(expr->right, scope); 
+    char message[128];
+    
     switch(expr->op) {
+        case CONST_INT  : return expr; 
         case ADD        : expr->evalResult.i = leftTmp->evalResult.i + rightTmp->evalResult.i ;break ; 
         case SUB        : expr->evalResult.i = leftTmp->evalResult.i - rightTmp->evalResult.i ;break ;            
         case DIV        : expr->evalResult.i = leftTmp->evalResult.i / rightTmp->evalResult.i ;break ; 
         case MUL        : expr->evalResult.i = leftTmp->evalResult.i * rightTmp->evalResult.i ;break ; 
        
-        default : PrintError("Evaluation Non pris en charge par la fonction : exec_arithm_expr\n ", expr->lineno); break;     
+        default :
+        sprintf(message, "Evaluation Non pris en charge par la fonction : exec_arithm_exp_ %d\n ", expr->op);
+        PrintError(message, -1); break;     
     }
+    expr->op = CONST_INT;
+    expr->isEvaluated = TRUE ;
+    
     return expr;         
 }
 
@@ -379,40 +395,47 @@ Expr exec_boolean_expr(Expr expr, Scope scope) {
     Expr rightTmp, leftTmp;
     leftTmp  =  exec_expr(expr->left, scope); 
     rightTmp =  exec_expr(expr->right, scope); 
+    expr->isEvaluated = TRUE ;
+    char message[128];
+     
     switch(expr->op) {
+        case CONST_INT  : return expr;  
         case EQ         : 
-            if ( leftTmp->evalResult.i == rightTmp->evalResult.i  ) expr->evalResult.i = 0 ;         
-            else expr->evalResult.i = 1  ; 
-            expr->isEvaluated = TRUE ; 
-            return expr ; 
+            if ( leftTmp->evalResult.i == rightTmp->evalResult.i  ) expr->evalResult.i = 1;         
+            else expr->evalResult.i = 0  ; 
+            expr->isEvaluated = TRUE ;  
+            break;
         case NEQ         : 
-            if ( leftTmp->evalResult.i != rightTmp->evalResult.i  ) expr->evalResult.i = 0 ;         
-            else expr->evalResult.i = 1  ; 
+            if ( leftTmp->evalResult.i != rightTmp->evalResult.i  ) expr->evalResult.i = 1;         
+            else expr->evalResult.i = 0  ; 
             expr->isEvaluated = TRUE ; 
-            return expr ; 
+            break;
         case LT          : 
-            if ( leftTmp->evalResult.i < rightTmp->evalResult.i  ) expr->evalResult.i = 0 ;         
-            else expr->evalResult.i = 1  ; 
+            if ( leftTmp->evalResult.i < rightTmp->evalResult.i  ) expr->evalResult.i = 1;         
+            else expr->evalResult.i = 0  ; 
             expr->isEvaluated = TRUE ; 
-            return expr ; 
+            break;
         case LTE        : 
-            if ( leftTmp->evalResult.i <= rightTmp->evalResult.i  ) expr->evalResult.i = 0 ;         
-            else expr->evalResult.i = 1  ; 
+            if ( leftTmp->evalResult.i <= rightTmp->evalResult.i  ) expr->evalResult.i = 1;         
+            else expr->evalResult.i = 0  ; 
             expr->isEvaluated = TRUE ; 
-            return expr ; 
+            break;
         case GT        : 
-            if ( leftTmp->evalResult.i > rightTmp->evalResult.i  ) expr->evalResult.i = 0 ;         
-            else expr->evalResult.i = 1  ; 
+            if ( leftTmp->evalResult.i > rightTmp->evalResult.i  ) expr->evalResult.i = 1;         
+            else expr->evalResult.i = 0  ; 
             expr->isEvaluated = TRUE ; 
-            return expr ; 
+            break;
         case GTE         : 
-            if ( leftTmp->evalResult.i >= rightTmp->evalResult.i  ) expr->evalResult.i = 0 ;         
-            else expr->evalResult.i = 1  ; 
+            if ( leftTmp->evalResult.i >= rightTmp->evalResult.i  ) expr->evalResult.i = 1;         
+            else expr->evalResult.i = 0  ; 
             expr->isEvaluated = TRUE ; 
-            return expr ; 
+            break;
               
-        default : PrintError("Evaluation Non pris en charge par la fonction : exec_arithm_expr\n ", expr->lineno); break;     
+        default : 
+        sprintf(message, "Evaluation Non pris en charge par la fonction : exec_boolean_expr %d\n ", expr->op);
+        PrintError(message, -1); break;     
     }
+    expr->op = CONST_INT;
     return expr;         
 }
 
@@ -422,6 +445,7 @@ Expr exec_concat_expr(Expr expr, Scope scope) {
     leftTmp  =  exec_expr(expr->left, scope); 
     rightTmp =  exec_expr(expr->right, scope); 
     Expr result; 
+    result->isEvaluated = TRUE ;  
     switch(expr->op) {
         case CONCAT     : 
         result = ExprFromString(strcat(leftTmp->evalResult.s,rightTmp->evalResult.s));

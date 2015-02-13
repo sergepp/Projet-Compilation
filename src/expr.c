@@ -65,16 +65,7 @@ void AssertExprIsValid(Expr expr){
         /* Ses types sont compatibles pour toutes les operations qu'elle contient */
     }
 }
-
-void ExprAssertStaticFieldAccessIsOk(char* classname, char* name){
-    printf("ExprAssertStaticFieldAccessIsOk Not implemented\n");
-}
-
-
-void ExprAssertStaticMethodAccessIsOk(char* classname, char* name, Expr e5) {
-    printf("ExprAssertStaticMethodAccessIsOk Not implemented\n");
-}
-
+ 
 
 void ExprAssertIDIsOk(char* name) {
     char message[128];
@@ -110,11 +101,7 @@ Expr ExprFromMethodAccess(Expr e1, char* name, Expr args){
  
     return expr;
 }
-
-void ExprAssertMethodAccessIsOk(Expr e1,char* name, Expr e5){
-    printf("ExprAssertMethodAccessIsOk Not Implemented\n");
-}
-
+ 
 
 Expr ExprFromConcat(Expr e1, Expr e3){
     
@@ -129,11 +116,7 @@ Expr ExprFromConcat(Expr e1, Expr e3){
     
     return expr;
 }
-
-void ExprAssertInstanciationIsOk(char* className, Expr e){
-    printf("ExprAssertInstanciationIsOk Not Implemented\n");
-}
-
+ 
 Expr ExprFromInstanciation(char* className, Expr e){
     Expr expr ;
     char message[128];
@@ -185,24 +168,24 @@ void ExprAssertInheritsType(Class ct, Expr e){
 }
 
 void ExprAssertAllVarsAreDeclaredInScope(Expr expr, Class class) {
-     char* message[128];
-      /*
+     char message[128];
+    
      switch(expr->op) {
         case VAR_CALL   : 
-        if ( IsVarInClassScope(varName, Class class) == FALSE ){
-             sprintf(message, "Le nom de variable  %s a deja été utilise dans les parametres", varName);
-             PrintError(message);
+        if ( IsVarInClassScope(expr->value.s, class) == FALSE ){
+             sprintf(message, "Le nom de variable  %s a deja été utilise dans les parametres", expr->value.s);
+             PrintError(message, expr->lineno);
              exit(1);
         }
-        /* 
+        break;/*
         case SUB        : expr->value.i = leftTmp->value.i - rightTmp->value.i ;break ;            
         case DIV        : expr->value.i = leftTmp->value.i / rightTmp->value.i ;break ; 
         case MUL        : expr->value.i = leftTmp->value.i * rightTmp->value.i ;break ; 
-       
-        default : PrintError("Evaluation Non pris en charge par la fonction : ExprArithmeticEval\n "); break;     
+       */
+        default : PrintError("Evaluation Non pris en charge par la fonction : ExprAssertAllVarsAreDeclaredInScope\n ", -1); break;     
     }
     
-    */
+   
 }
 
 
@@ -260,7 +243,6 @@ Expr ExprFromVoid(){
 Expr ExprFromInt(int value) {
     Expr expr = NEW(1, _Expr);
     expr->op = CONST_INT; 
-    expr->value.i = value;
     expr->evalResult.i = value;
     expr->type = Integer; 
     expr->isEvaluated = TRUE;
@@ -363,82 +345,14 @@ void ExprPrintResult(Expr expr) {
         case DIV            : break;
         case VAR_CALL       : printf("Var %s  \n", expr->value.s );
         case INSTANCE       : printf("Instance of class %s\n", expr->value.instance->name);break;
-        case CONST_INT      : printf("Integer = %d\n", expr->value.i);                           break;
+        case CONST_INT      : printf("Integer = %d\n", expr->evalResult.i);                      break;
         case CONST_VOID     : printf("Void = void\n");                                           break;
-        case CONST_STR      : printf("String = %s\n", expr->value.s);                            break;
-        case CONCAT         : printf("String = %s\n", expr->value.s);                            break;
+        case CONST_STR      : printf("String = %s\n", expr->evalResult.s);                       break;
+        case CONCAT         : printf("String = %s\n", expr->evalResult.s);                       break;
         default : printf("Affichage Non encore implementé \n ");                                 break;     
     }
 }
 
 
-Expr ExprArithmeticEval(Expr expr); 
-Expr ExprEval(Expr expr);
-Expr ExprArithmeticEval(Expr expr) {
-    Expr rightTmp, leftTmp;
-    leftTmp  =  ExprEval(expr->left); 
-    rightTmp =  ExprEval(expr->right); 
-    switch(expr->op) {
-        case ADD        : expr->value.i = leftTmp->value.i + rightTmp->value.i ;break ; 
-        case SUB        : expr->value.i = leftTmp->value.i - rightTmp->value.i ;break ;            
-        case DIV        : expr->value.i = leftTmp->value.i / rightTmp->value.i ;break ; 
-        case MUL        : expr->value.i = leftTmp->value.i * rightTmp->value.i ;break ; 
-       
-        default : PrintError("Evaluation Non pris en charge par la fonction : ExprArithmeticEval\n ", expr->lineno); break;     
-    }
-    return expr;         
-}
-
-Expr ExprConcatEval(Expr expr) {
-    Expr rightTmp, leftTmp;
-    leftTmp  =  ExprEval(expr->left); 
-    rightTmp =  ExprEval(expr->right); 
-    switch(expr->op) {
-        case CONCAT     : expr->value.s=strcat(leftTmp->value.s,rightTmp->value.s);break;
-        default : PrintError("Erreur non concat : E\n ", expr->lineno); break;     
-    }
-    return expr;         
-}
-
-
-Expr ExprVarEval(Expr expr) {
-    Var var;
-    switch(expr->op) {
-        case VAR_CALL     : 
-             
-            var = GetVarByName(expr->value.s, currentScope);
-            return ExprEval(var->value);
-        default : PrintError("Erreur non Var : E\n ", expr->lineno); break;     
-    }        
-}
-
-
-Expr ExprEval(Expr expr) { 
-    
-    if ( expr->isEvaluated ) 
-        return expr;
-     
-    Expr e ;   
-    switch(expr->op) {
-        case CONST_INT      :  
-        case CONST_VOID     : 
-        case CONST_STR      :  
-        case INSTANCE       : return expr;
-        case ADD            : 
-        case SUB            :           
-        case DIV            :
-        case MUL            : 
-            e = ExprArithmeticEval(expr); 
-            e->isEvaluated = TRUE;
-            return e ; 
-        case CONCAT     : 
-             e = ExprConcatEval(expr);    
-             e->isEvaluated = TRUE;
-             return e ;
-        default : printf("Evaluation Non encore implementée \n "); break;     
-    }
-    return expr;     
-}
-
-
+  
 

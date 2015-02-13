@@ -1,0 +1,11 @@
+
+class A(xc:Integer) {
+    this.a = xc; 
+    a := xc; /* Ceci ne devrait pas marcher car pas de this implicite */ 
+} is {
+}
+
+/* BUG Ce programme ne déclenche aucune erreur */
+{}
+
+

@@ -3,8 +3,8 @@ CC=gcc
 #CFLAGS=-Wall -ansi -I./ -g 
 CFLAGS=  
 LDFLAGS= -g -lfl
-tp : $(OBJ)
-	$(CC) -o tp $(OBJ) $(LDFLAGS)
+zinc : $(OBJ)
+	$(CC) -o zn $(OBJ) $(LDFLAGS)
 
 test_lex : tp_l.c test_lex.c tp_y.h
 	$(CC) $(CFLAGS) -o test_lex tp_l.c test_lex.c $(LDFLAGS) 

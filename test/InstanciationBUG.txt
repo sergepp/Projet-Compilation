@@ -1,0 +1,21 @@
+
+class A(xc:Integer) {
+    this.v = xc; 
+} is {
+    a: Integer := 8 
+    b: Integer := 9
+     
+    c: String := "Hello" 
+    d: String := "World"
+}
+
+{
+    var a: A := new A(3);
+    is 
+    a.a.println();
+    a.b.println();
+    a.c.println();
+    a.d.println();
+}
+
+

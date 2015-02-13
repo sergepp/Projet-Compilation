@@ -46,7 +46,7 @@ extern int yydebug;
 /* Niveau de 'verbosite'.
  * Par defaut, n'imprime que le resultat et les messages d'erreur
  */
-bool verbose = TRUE;
+bool verbose = FALSE;
 
 /* Evaluation ou pas. Par defaut, on evalue les expressions */
 bool noEval = FALSE;
@@ -55,19 +55,47 @@ bool noEval = FALSE;
 int errorCode = NO_ERROR;
 
 FILE *fd = NIL(FILE);
-
 /* Appel:
  *   tp [-option]* programme.txt
  * Les options doivent apparaitre avant le nom du fichier du programme.
  * Options: -[eE] -[vV] -[hH?]
  */
 int main(int argc, char **argv) {
-  int fi, res; 
   
-  if ((fi = open("../test/syntaxique/ex1.txt", O_RDONLY)) == -1) {
-    fprintf(stderr, "Error: Cannot open %s\n", "../test/syntaxique/ex1.txt");
+  int fi;
+  int i, res;
+   
+  if (argc == 1) {
+    fprintf(stderr, "Syntax: zn [-v] program.txt\n");
     exit(USAGE_ERROR);
-  }   
+  }
+  
+  for(i = 1; i < argc; i++) {
+    if (argv[i][0] == '-') {
+      switch (argv[i][1]) {
+      case 'v': case 'V':
+	        verbose = TRUE; continue;  
+      case '?': case 'h': case 'H':
+	        fprintf(stderr, "Syntax: zn [-v] program.txt\n");
+	        exit(USAGE_ERROR);
+      default:
+	        fprintf(stderr, "Error: Unknown Option: %c\n", argv[i][1]);
+	        exit(USAGE_ERROR);
+      }
+    } else break;
+  }
+
+  if (i == argc) {
+    fprintf(stderr, "Error: Program file is missing\n");
+    exit(USAGE_ERROR);
+  }
+
+  if ((fi = open(argv[i++], O_RDONLY)) == -1) {
+    fprintf(stderr, "Error: Cannot open %s\n", argv[i-1]);
+    exit(USAGE_ERROR);
+  }
+ 
+ 
                 
   /* Initialisations */
   InitializationFinished = FALSE;

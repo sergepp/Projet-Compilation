@@ -208,9 +208,9 @@ expr : ID           { /*ExprAssertIDIsOk($1);*/ $$ = ExprFromVar($1); } // Const
     | selection     { $$ = $1; } 
     | '(' expr ')'  { $$ = $2; }      
 ;
-selection :   expr '.' ID                    { ExprAssertFieldAccessIsOk($1,$3);                                     $$ = ExprFromFieldAccess($1, $3);           } 
-    |   CLASS_TYPE '.' ID                    { AssertClassExists($1);  ExprAssertStaticFieldAccessIsOk($1,$3);       $$ = ExprFromStaticFieldAccess($1, $3);     }
-    |   CLASS_TYPE '.' ID '(' Opt_L_expr ')' { AssertClassExists($1);  ExprAssertStaticMethodAccessIsOk($1,$3, $5);  $$ = ExprFromStaticMethodAccess($1, $3, $5);}
+selection :   expr '.' ID                    { ExprAssertFieldAccessIsOk($1,$3);    $$ = ExprFromFieldAccess($1, $3);           } 
+    |   CLASS_TYPE '.' ID                    { AssertClassExists($1);               $$ = ExprFromStaticFieldAccess($1, $3);     }
+    |   CLASS_TYPE '.' ID '(' Opt_L_expr ')' { AssertClassExists($1);               $$ = ExprFromStaticMethodAccess($1, $3, $5);}
     |         expr '.' ID '(' Opt_L_expr ')' { $$ = ExprFromMethodAccess($1, $3, $5);  }    
 ; 
 concatExpr : expr CONCAT expr   { $$ = ExprFromConcat($1, $3); }

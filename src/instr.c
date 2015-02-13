@@ -219,22 +219,4 @@ void InstrPrint(Instr inst) {
 
 
 
-
-
-
-
-
-
-
-void InstrEval(Instr instrs) { 
-    switch(instrs->op) {
-        case EXPR       : ExprPrintResult(ExprEval(instrs->expr)); break;
-        case ASSIGN     : break;
-        case PROC_BLOC  : InstrEval(instrs->listInstr);break;
-        case FN_BLOC    : break;
-        case IF         : break;
-        
-        default : printf("Evaluation de L'instruction Non encore implementée \n "); break;     
-    }  
-}
-
+ 

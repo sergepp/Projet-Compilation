@@ -177,14 +177,7 @@ void ProgramPrint(Program prg) {
     }    
 }
 
-
-void ProgramEval(Program program){
-    Instr instrs = program->instrs;
-    while (instrs != NULL) {
-        InstrEval(instrs)  ; 
-        instrs = instrs->next; 
-    }
-}
+  
 
 void ProgramTypeAndRedirect(Program program){
     Class cl = program->classDefs; 
@@ -192,6 +185,30 @@ void ProgramTypeAndRedirect(Program program){
         ClassTypeAndRedirect(cl);
         cl = cl->next;
     }
+    Var var = program->instrs->var;
+    Expr e;
+    Var c;
+    char message[128];
+    while( var != NULL  ) {
+
+        
+         e = var->value;
+         if ( e != NULL ) {    
+            ReplaceExprViaScope(e, MainScope);
+            ExprAssertInheritsType(var->class, var->value);
+         }
+       /* Le nom de la variable ne doit pas deja avoir ete utilise dans le scope actuel
+        c = GetVarByName(var->name, MainScope);
+        if ( c != NULL ){ 
+            sprintf(message, "Variable %s deja definie dans le scope actuel", var->name);
+            PrintError(message, e->lineno);
+            exit(1);
+         }
+         
+         */ 
+         var = var->next;
+     }
+     
 }
 
 void InstrTypeAndRedirect(Instr instrs, Scope sc){
